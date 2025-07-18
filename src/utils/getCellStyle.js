@@ -1,3 +1,4 @@
+// utils/getCellStyle.js
 export const getCellStyle = (valor) => {
   if (valor === "RETARDO")
     return { backgroundColor: "#FFC00040", color: "#f57c00" };

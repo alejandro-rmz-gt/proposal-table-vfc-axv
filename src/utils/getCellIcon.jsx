@@ -1,3 +1,7 @@
+// utils/getCellIcon.jsx
+import React from "react";
+import { Warning, Error, Assignment, Event } from "@mui/icons-material";
+
 export const getCellIcon = (valor) => {
   if (valor === "RETARDO")
     return <Warning sx={{ fontSize: 12, color: "#f57c00" }} />;

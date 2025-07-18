@@ -16,33 +16,15 @@ import {
   Info,
 } from "@mui/icons-material";
 
-// data
 import { empleados } from "../data/empleados";
 import { dias } from "../data/dias";
-import { horarios } from "../data/empleados";
-// funciones
-import { getCellStyle } from "../utils/getCellStyle";
+import { horarios } from "../data/horarios";
+
+import { formatHorario } from "../utils/formatHorario";
 import { getCellIcon } from "../utils/getCellIcon";
+import { getCellStyle } from "../utils/getCellStyle";
 
 export const AttendanceSystemCVV = () => {
-  const formatHorario = (valor) => {
-    if (valor.includes("/")) {
-      const [entrada, salida] = valor.split("/");
-      return (
-        <div>
-          <div
-            style={{ fontWeight: "bold", color: "#1976d2", fontSize: "11px" }}
-          >
-            {entrada}
-          </div>
-          <div style={{ color: "#666", fontSize: "11px" }}>{salida}</div>
-          <div style={{ color: "#4caf50", fontSize: "10px" }}>8.2h</div>
-        </div>
-      );
-    }
-    return valor;
-  };
-
   return (
     <div
       style={{
