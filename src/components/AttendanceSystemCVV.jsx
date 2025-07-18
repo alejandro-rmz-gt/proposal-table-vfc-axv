@@ -11,23 +11,28 @@ import { StatsDashboard } from "./ui/StatsDashboard";
 import { Legend } from "./ui/Legend";
 import { AttendanceTable } from "./ui/AttendanceTable";
 
+const container = {
+  backgroundColor: "#f5f5f5",
+  minHeight: "100vh",
+  fontFamily: "system-ui, -apple-system, sans-serif",
+};
+
+const stylesSubContainer = {
+  maxWidth: "1400px",
+  margin: "0 auto",
+  padding: "24px",
+};
+
 export const AttendanceSystemCVV = () => {
   return (
-    <div
-      style={{
-        backgroundColor: "#f5f5f5",
-        minHeight: "100vh",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-      }}
-    >
+    <div style={container}>
       <Header />
 
-      <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "24px" }}>
-
+      <div style={stylesSubContainer}>
         <StatsDashboard />
 
         <Legend />
-        
+
         <AttendanceTable
           empleados={empleados}
           dias={dias}
