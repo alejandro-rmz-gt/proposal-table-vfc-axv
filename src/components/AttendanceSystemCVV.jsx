@@ -16,131 +16,15 @@ import {
   Info,
 } from "@mui/icons-material";
 
+// data
+import { empleados } from "../data/empleados";
+import { dias } from "../data/dias";
+import { horarios } from "../data/empleados";
+// funciones
+import { getCellStyle } from "../utils/getCellStyle";
+import { getCellIcon } from "../utils/getCellIcon";
+
 export const AttendanceSystemCVV = () => {
-  // Datos estáticos para la maquetación
-  const empleados = [
-    { id: 1, nombre: "MIGUEL ANGEL ROMERO GUEVARA", plaza: "CVV-20" },
-    { id: 2, nombre: "MARIA GABRIELA NUCHE SANTACRUZ", plaza: "CVV-20" },
-    { id: 3, nombre: "JOCELINE SALDAÑA PEREZ", plaza: "CVV-20" },
-    { id: 4, nombre: "OSORIO MENDIETA GABRIELA", plaza: "CVV-20" },
-    { id: 5, nombre: "JENNIFER JESSICA CRUZ HERNANDEZ", plaza: "CVV-20" },
-  ];
-
-  const dias = [
-    { fecha: "16", dia: "Lun" },
-    { fecha: "17", dia: "Mar" },
-    { fecha: "19", dia: "Jue" },
-    { fecha: "20", dia: "Vie" },
-    { fecha: "21", dia: "Lun" },
-    { fecha: "22", dia: "Mar" },
-    { fecha: "23", dia: "Mié" },
-    { fecha: "26", dia: "Lun" },
-    { fecha: "27", dia: "Mar" },
-    { fecha: "28", dia: "Mié" },
-    { fecha: "29", dia: "Jue" },
-    { fecha: "30", dia: "Vie" },
-  ];
-
-  // Datos de ejemplo para mostrar diferentes tipos de celdas
-  const horarios = {
-    1: [
-      "07:43/15:55",
-      "--",
-      "07:43/15:57",
-      "07:44/15:56",
-      "07:40/15:58",
-      "07:42/15:54",
-      "07:45/15:59",
-      "07:41/15:53",
-      "07:46/15:57",
-      "07:44/15:55",
-      "07:47/15:58",
-      "07:43/15:56",
-    ],
-    2: [
-      "12:00/20:24",
-      "PERMISO",
-      "07:47/16:42",
-      "RETARDO",
-      "07:53/15:48",
-      "07:49/15:52",
-      "07:51/15:55",
-      "07:48/15:50",
-      "RETARDO",
-      "07:52/15:48",
-      "07:55/15:50",
-      "RETARDO",
-    ],
-    3: [
-      "RETARDO",
-      "PERMISO",
-      "RETARDO",
-      "RETARDO",
-      "PERMISO",
-      "08:48/16:01",
-      "RETARDO",
-      "RETARDO",
-      "RETARDO",
-      "RETARDO",
-      "RETARDO",
-      "RETARDO",
-    ],
-    4: [
-      "06:56/15:33",
-      "VACACIONES",
-      "07:33/15:56",
-      "07:30/15:45",
-      "07:35/15:50",
-      "07:32/15:48",
-      "07:38/15:52",
-      "FALTA",
-      "07:45/15:50",
-      "07:40/15:45",
-      "07:42/15:48",
-      "07:38/15:52",
-    ],
-    5: [
-      "07:05/15:37",
-      "07:13/15:37",
-      "07:13/15:37",
-      "07:10/15:35",
-      "07:08/15:40",
-      "07:15/15:33",
-      "07:12/15:38",
-      "RETARDO",
-      "07:06/15:42",
-      "07:08/15:35",
-      "07:12/15:40",
-      "07:05/15:38",
-    ],
-  };
-
-  const getCellStyle = (valor) => {
-    if (valor === "RETARDO")
-      return { backgroundColor: "#FFC00040", color: "#f57c00" };
-    if (valor === "FALTA")
-      return { backgroundColor: "#C55A1140", color: "#d32f2f" };
-    if (valor === "PERMISO")
-      return { backgroundColor: "#FF99CC40", color: "#e91e63" };
-    if (valor === "VACACIONES")
-      return { backgroundColor: "#FFFF0040", color: "#f57c00" };
-    if (valor === "--")
-      return { backgroundColor: "transparent", color: "#999" };
-    return { backgroundColor: "transparent", color: "#333" };
-  };
-
-  const getCellIcon = (valor) => {
-    if (valor === "RETARDO")
-      return <Warning sx={{ fontSize: 12, color: "#f57c00" }} />;
-    if (valor === "FALTA")
-      return <Error sx={{ fontSize: 12, color: "#d32f2f" }} />;
-    if (valor === "PERMISO")
-      return <Assignment sx={{ fontSize: 12, color: "#e91e63" }} />;
-    if (valor === "VACACIONES")
-      return <Event sx={{ fontSize: 12, color: "#f57c00" }} />;
-    return null;
-  };
-
   const formatHorario = (valor) => {
     if (valor.includes("/")) {
       const [entrada, salida] = valor.split("/");
