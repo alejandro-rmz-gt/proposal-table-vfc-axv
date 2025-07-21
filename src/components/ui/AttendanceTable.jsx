@@ -1,12 +1,16 @@
 // components/ui/AttendanceTable.jsx
-import React, { useState } from "react";
+import React from "react";
 import { Business, Person } from "@mui/icons-material";
 import { EditableCell } from "./table/EditableCell";
 
-export const AttendanceTable = ({ empleados, dias, horarios }) => {
-  // Estado para manejar los cambios de estatus
-  const [cellStatuses, setCellStatuses] = useState({});
-
+export const AttendanceTable = ({
+  empleados,
+  dias,
+  horarios,
+  cellStatuses,
+  onStatusChange,
+  getCellStatus,
+}) => {
   // Función para convertir horario string a objeto
   const parseHorario = (horarioString) => {
     if (horarioString.includes("/")) {
@@ -22,26 +26,6 @@ export const AttendanceTable = ({ empleados, dias, horarios }) => {
         salida: { hora: "--", status: horarioString.toLowerCase() },
       };
     }
-  };
-
-  // Manejar cambio de estatus
-  const handleStatusChange = (employeeId, dayIndex, type, newStatus) => {
-    const key = `${employeeId}-${dayIndex}-${type}`;
-    setCellStatuses((prev) => ({
-      ...prev,
-      [key]: newStatus,
-    }));
-
-    // Aquí podrías hacer una llamada a API para guardar el cambio
-    console.log(
-      `Cambio: Empleado ${employeeId}, Día ${dayIndex}, Tipo ${type}, Nuevo estatus: ${newStatus}`
-    );
-  };
-
-  // Obtener estatus actual de una celda
-  const getCellStatus = (employeeId, dayIndex, type) => {
-    const key = `${employeeId}-${dayIndex}-${type}`;
-    return cellStatuses[key] || "normal";
   };
 
   return (
@@ -231,7 +215,7 @@ export const AttendanceTable = ({ empleados, dias, horarios }) => {
                         employeeId={empleado.id}
                         dayIndex={diaIndex}
                         type="entrada"
-                        onStatusChange={handleStatusChange}
+                        onStatusChange={onStatusChange}
                       />
 
                       {/* Celda de Salida */}
@@ -247,7 +231,7 @@ export const AttendanceTable = ({ empleados, dias, horarios }) => {
                         employeeId={empleado.id}
                         dayIndex={diaIndex}
                         type="salida"
-                        onStatusChange={handleStatusChange}
+                        onStatusChange={onStatusChange}
                       />
                     </React.Fragment>
                   );
