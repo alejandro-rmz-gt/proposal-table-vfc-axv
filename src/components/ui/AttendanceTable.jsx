@@ -1,11 +1,49 @@
-// components/AttendanceTable.jsx
-import React from "react";
+// components/ui/AttendanceTable.jsx
+import React, { useState } from "react";
 import { Business, Person } from "@mui/icons-material";
-import { getCellStyle } from "../../utils/getCellStyle.js";
-import { getCellIcon } from "../../utils/getCellIcon.jsx";
-import { formatHorario } from "../../utils/formatHorario.jsx";
+import { EditableCell } from "./table/EditableCell";
 
 export const AttendanceTable = ({ empleados, dias, horarios }) => {
+  // Estado para manejar los cambios de estatus
+  const [cellStatuses, setCellStatuses] = useState({});
+
+  // Función para convertir horario string a objeto
+  const parseHorario = (horarioString) => {
+    if (horarioString.includes("/")) {
+      const [entrada, salida] = horarioString.split("/");
+      return {
+        entrada: { hora: entrada, status: "normal" },
+        salida: { hora: salida, status: "normal" },
+      };
+    } else {
+      // Para casos como "RETARDO", "FALTA", etc.
+      return {
+        entrada: { hora: "--", status: horarioString.toLowerCase() },
+        salida: { hora: "--", status: horarioString.toLowerCase() },
+      };
+    }
+  };
+
+  // Manejar cambio de estatus
+  const handleStatusChange = (employeeId, dayIndex, type, newStatus) => {
+    const key = `${employeeId}-${dayIndex}-${type}`;
+    setCellStatuses((prev) => ({
+      ...prev,
+      [key]: newStatus,
+    }));
+
+    // Aquí podrías hacer una llamada a API para guardar el cambio
+    console.log(
+      `Cambio: Empleado ${employeeId}, Día ${dayIndex}, Tipo ${type}, Nuevo estatus: ${newStatus}`
+    );
+  };
+
+  // Obtener estatus actual de una celda
+  const getCellStatus = (employeeId, dayIndex, type) => {
+    const key = `${employeeId}-${dayIndex}-${type}`;
+    return cellStatuses[key] || "normal";
+  };
+
   return (
     <div
       style={{
@@ -74,24 +112,60 @@ export const AttendanceTable = ({ empleados, dias, horarios }) => {
                   Empleado
                 </div>
               </th>
+              {/* Generar columnas para cada día (Entrada y Salida) */}
               {dias.map((dia, index) => (
-                <th
-                  key={index}
-                  style={{
-                    minWidth: "90px",
-                    padding: "12px 8px",
-                    border: "1px solid #e0e0e0",
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    fontSize: "12px",
-                    backgroundColor: "#f8f9fa",
-                  }}
-                >
-                  <div style={{ fontWeight: "bold" }}>{dia.dia}</div>
-                  <div style={{ fontSize: "14px", marginTop: "2px" }}>
-                    {dia.fecha}
-                  </div>
-                </th>
+                <React.Fragment key={index}>
+                  <th
+                    style={{
+                      minWidth: "70px",
+                      padding: "8px 4px",
+                      border: "1px solid #e0e0e0",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      fontSize: "11px",
+                      backgroundColor: "#f8f9fa",
+                    }}
+                  >
+                    <div style={{ fontWeight: "bold" }}>{dia.dia}</div>
+                    <div style={{ fontSize: "10px", marginTop: "2px" }}>
+                      {dia.fecha}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        color: "#666",
+                        marginTop: "1px",
+                      }}
+                    >
+                      Entrada
+                    </div>
+                  </th>
+                  <th
+                    style={{
+                      minWidth: "70px",
+                      padding: "8px 4px",
+                      border: "1px solid #e0e0e0",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      fontSize: "11px",
+                      backgroundColor: "#f8f9fa",
+                    }}
+                  >
+                    <div style={{ fontWeight: "bold" }}>{dia.dia}</div>
+                    <div style={{ fontSize: "10px", marginTop: "2px" }}>
+                      {dia.fecha}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        color: "#666",
+                        marginTop: "1px",
+                      }}
+                    >
+                      Salida
+                    </div>
+                  </th>
+                </React.Fragment>
               ))}
             </tr>
           </thead>
@@ -137,52 +211,45 @@ export const AttendanceTable = ({ empleados, dias, horarios }) => {
                     {empleado.nombre}
                   </div>
                 </td>
-                {horarios[empleado.id].map((horario, diaIndex) => {
-                  const cellStyle = getCellStyle(horario);
-                  const icon = getCellIcon(horario);
+
+                {/* Generar celdas para cada día */}
+                {horarios[empleado.id].map((horarioString, diaIndex) => {
+                  const horarioData = parseHorario(horarioString);
 
                   return (
-                    <td
-                      key={diaIndex}
-                      style={{
-                        minWidth: "90px",
-                        height: "70px",
-                        border: "1px solid #e0e0e0",
-                        textAlign: "center",
-                        padding: "8px",
-                        verticalAlign: "middle",
-                        fontSize: "11px",
-                        ...cellStyle,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          height: "100%",
-                          gap: "2px",
+                    <React.Fragment key={diaIndex}>
+                      {/* Celda de Entrada */}
+                      <EditableCell
+                        horario={{
+                          ...horarioData.entrada,
+                          status: getCellStatus(
+                            empleado.id,
+                            diaIndex,
+                            "entrada"
+                          ),
                         }}
-                      >
-                        {icon && (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "2px",
-                            }}
-                          >
-                            {icon}
-                          </div>
-                        )}
-                        <div>
-                          {horario.includes("/")
-                            ? formatHorario(horario)
-                            : horario}
-                        </div>
-                      </div>
-                    </td>
+                        employeeId={empleado.id}
+                        dayIndex={diaIndex}
+                        type="entrada"
+                        onStatusChange={handleStatusChange}
+                      />
+
+                      {/* Celda de Salida */}
+                      <EditableCell
+                        horario={{
+                          ...horarioData.salida,
+                          status: getCellStatus(
+                            empleado.id,
+                            diaIndex,
+                            "salida"
+                          ),
+                        }}
+                        employeeId={empleado.id}
+                        dayIndex={diaIndex}
+                        type="salida"
+                        onStatusChange={handleStatusChange}
+                      />
+                    </React.Fragment>
                   );
                 })}
               </tr>
