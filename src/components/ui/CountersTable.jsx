@@ -56,6 +56,28 @@ export const CountersTable = ({ empleados, cellStatuses, dias }) => {
     };
   };
 
+  // Calcular totales
+  const calculateTotals = () => {
+    const totals = {
+      normal: 0,
+      retardo: 0,
+      falta: 0,
+      permiso: 0,
+      vacaciones: 0,
+    };
+
+    empleados.forEach((empleado) => {
+      const employeeCounters = calculateCountersForEmployee(empleado.id);
+      Object.keys(totals).forEach((key) => {
+        totals[key] += employeeCounters[key];
+      });
+    });
+
+    return totals;
+  };
+
+  const totals = calculateTotals();
+
   return (
     <div style={styleWrapper}>
       <div style={styleTableWrapper}>
@@ -121,6 +143,25 @@ export const CountersTable = ({ empleados, cellStatuses, dias }) => {
                 </tr>
               );
             })}
+            {/* Fila de totales */}
+            <tr style={styleTotalRow}>
+              <td style={styleTdTotal} colSpan={2}>
+                <div style={styleTotalLabel}>
+                  <strong>TOTALES ({empleados.length} empleados)</strong>
+                </div>
+              </td>
+              {statusTypes.map((status) => {
+                const total = totals[status.id];
+                const badgeStyle = getCounterBadgeStyle(total, status.color);
+                return (
+                  <td key={status.id} style={styleTdCenter}>
+                    <div style={{ ...styleCounterBadge, ...badgeStyle }}>
+                      <strong>{total}</strong>
+                    </div>
+                  </td>
+                );
+              })}
+            </tr>
           </tbody>
         </table>
       </div>
@@ -128,6 +169,7 @@ export const CountersTable = ({ empleados, cellStatuses, dias }) => {
   );
 };
 
+// Estilos (mantengo los originales con algunas mejoras)
 const styleWrapper = {
   backgroundColor: "white",
   borderRadius: "8px",
@@ -202,6 +244,23 @@ const styleTdCenter = {
   textAlign: "center",
 };
 
+const styleTdTotal = {
+  padding: "12px",
+  border: "1px solid #e0e0e0",
+  backgroundColor: "#f8f9fa",
+  fontWeight: "bold",
+};
+
+const styleTotalRow = {
+  backgroundColor: "#f8f9fa",
+  borderTop: "2px solid #1976d2",
+};
+
+const styleTotalLabel = {
+  fontSize: "13px",
+  color: "#1976d2",
+};
+
 const stylePlazaBadge = {
   backgroundColor: "#1976d2",
   color: "white",
@@ -240,8 +299,10 @@ const styleInfoRow = {
   display: "flex",
   alignItems: "center",
   gap: "6px",
+  justifyContent: "center",
 };
 
 const styleInfoStrong = {
   fontWeight: "500",
+  color: "#333",
 };
