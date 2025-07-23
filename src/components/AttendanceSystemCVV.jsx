@@ -26,13 +26,17 @@ export const AttendanceSystemCVV = () => {
     handleWeekChange,
     getCurrentWeekDisplay,
 
-    // Funciones de manejo de status
+    // Funciones de manejo de status y tiempo
     handleStatusChange,
+    handleTimeChange,
     getCellStatus,
 
     // Debug info
     debugInfo,
   } = useWeekAttendance(testData.attendanceData.employees);
+
+  // Log de debug (opcional)
+  console.log("AttendanceSystemCVV - Debug:", debugInfo);
 
   return (
     <div style={styleMainContainer}>
@@ -48,6 +52,7 @@ export const AttendanceSystemCVV = () => {
           horarios={horarios}
           cellStatuses={cellStatuses}
           onStatusChange={handleStatusChange}
+          onTimeChange={handleTimeChange}
           getCellStatus={getCellStatus}
         />
 

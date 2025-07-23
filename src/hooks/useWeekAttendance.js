@@ -222,6 +222,37 @@ export const useWeekAttendance = (
     setCurrentWeekStart(monday);
   };
 
+  // Manejar cambios de hora en las celdas
+  const handleTimeChange = (employeeId, dayIndex, type, newTime) => {
+    // Actualizar los datos de la semana actual
+    setCurrentWeekData((prevData) => {
+      return prevData.map((employee) => {
+        if (employee.id === employeeId) {
+          const updatedRecords = [...employee.records];
+          if (updatedRecords[dayIndex]) {
+            updatedRecords[dayIndex] = {
+              ...updatedRecords[dayIndex],
+              [type]: {
+                ...updatedRecords[dayIndex][type],
+                time: newTime,
+                originalTime: newTime === "--" ? null : newTime,
+              },
+            };
+          }
+          return {
+            ...employee,
+            records: updatedRecords,
+          };
+        }
+        return employee;
+      });
+    });
+
+    console.log(
+      `Cambio de hora: Empleado ${employeeId}, Día ${dayIndex}, Tipo ${type}, Nueva hora: ${newTime}`
+    );
+  };
+
   // Manejar cambios de status en las celdas
   const handleStatusChange = (employeeId, dayIndex, type, newStatus) => {
     const key = `${employeeId}-${dayIndex}-${type}`;
@@ -274,8 +305,9 @@ export const useWeekAttendance = (
     goToWeek,
     getCurrentWeekDisplay,
 
-    // Funciones de manejo de status
+    // Funciones de manejo de status y tiempo
     handleStatusChange,
+    handleTimeChange,
     getCellStatus,
 
     // Debug y utilidades

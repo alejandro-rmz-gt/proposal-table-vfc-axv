@@ -9,6 +9,7 @@ export const AttendanceTable = ({
   horarios,
   cellStatuses,
   onStatusChange,
+  onTimeChange, // Nueva prop para cambios de hora
   getCellStatus,
 }) => {
   const [contextMenu, setContextMenu] = useState({
@@ -134,6 +135,7 @@ export const AttendanceTable = ({
                           dayIndex={diaIndex}
                           type="entrada"
                           onStatusChange={onStatusChange}
+                          onTimeChange={onTimeChange}
                           onContextMenuOpen={handleContextMenuOpen}
                         />
                         <EditableCell
@@ -149,6 +151,7 @@ export const AttendanceTable = ({
                           dayIndex={diaIndex}
                           type="salida"
                           onStatusChange={onStatusChange}
+                          onTimeChange={onTimeChange}
                           onContextMenuOpen={handleContextMenuOpen}
                         />
                       </React.Fragment>
