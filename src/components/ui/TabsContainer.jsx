@@ -23,20 +23,8 @@ export const TabsContainer = ({ children }) => {
   return (
     <div>
       {/* Navegación de tabs */}
-      <div
-        style={{
-          backgroundColor: "white",
-          borderRadius: "8px 8px 0 0",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-          marginBottom: "0",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            borderBottom: "1px solid #e0e0e0",
-          }}
-        >
+      <div style={styleHeader}>
+        <div style={styleBorder}>
           {tabs.map((tab) => {
             const IconComponent = tab.icon;
             const isActive = activeTab === tab.id;
@@ -97,16 +85,26 @@ export const TabsContainer = ({ children }) => {
       </div>
 
       {/* Contenido de la tab activa */}
-      <div
-        style={{
-          backgroundColor: "white",
-          borderRadius: "0 0 8px 8px",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-          minHeight: "400px",
-        }}
-      >
-        {children[activeTab]}
-      </div>
+      <div style={styleTab}>{children[activeTab]}</div>
     </div>
   );
+};
+
+const styleHeader = {
+  backgroundColor: "white",
+  borderRadius: "8px 8px 0 0",
+  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  marginBottom: "0",
+};
+
+const styleBorder = {
+  display: "flex",
+  borderBottom: "1px solid #e0e0e0",
+};
+
+const styleTab = {
+  backgroundColor: "white",
+  borderRadius: "0 0 8px 8px",
+  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  minHeight: "400px",
 };
