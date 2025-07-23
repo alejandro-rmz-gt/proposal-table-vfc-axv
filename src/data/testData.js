@@ -1,5 +1,3 @@
-// testData.js - Objeto completo para pruebas
-
 export const testData = {
   user: {
     id: 1,
