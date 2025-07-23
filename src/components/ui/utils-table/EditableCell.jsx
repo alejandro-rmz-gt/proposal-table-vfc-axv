@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { getCellStyle } from "../../../utils/getCellStyle.js";
 import { getCellIcon } from "../../../utils/getCellIcon.jsx";
-import { StatusMenu } from "./StatusMenu.jsx";
 
 export const EditableCell = ({
   horario,
@@ -9,33 +8,37 @@ export const EditableCell = ({
   dayIndex,
   type,
   onStatusChange,
+  onContextMenuOpen, // Nueva prop para comunicar con el componente padre
 }) => {
-  const [contextMenu, setContextMenu] = useState({
-    visible: false,
-    x: 0,
-    y: 0,
-  });
-
   const [hovering, setHovering] = useState(false);
   const currentStatus = horario.status || "normal";
 
   const handleContextMenu = (e) => {
     e.preventDefault();
-    setContextMenu({ visible: true, x: e.clientX, y: e.clientY });
+    if (onContextMenuOpen) {
+      onContextMenuOpen({
+        visible: true,
+        x: e.clientX,
+        y: e.clientY,
+        employeeId,
+        dayIndex,
+        type,
+        currentStatus,
+      });
+    }
   };
 
   const handleDoubleClick = (e) => {
-    setContextMenu({ visible: true, x: e.clientX, y: e.clientY });
-  };
-
-  const handleCloseMenu = () => {
-    setContextMenu({ ...contextMenu, visible: false });
-  };
-
-  const handleStatusSelect = (newStatus) => {
-    handleCloseMenu();
-    if (onStatusChange) {
-      onStatusChange(employeeId, dayIndex, type, newStatus);
+    if (onContextMenuOpen) {
+      onContextMenuOpen({
+        visible: true,
+        x: e.clientX,
+        y: e.clientY,
+        employeeId,
+        dayIndex,
+        type,
+        currentStatus,
+      });
     }
   };
 
@@ -53,32 +56,20 @@ export const EditableCell = ({
   };
 
   return (
-    <>
-      <td
-        onContextMenu={handleContextMenu}
-        onDoubleClick={handleDoubleClick}
-        onMouseEnter={() => setHovering(true)}
-        onMouseLeave={() => setHovering(false)}
-        style={{ ...styleCell, ...cellStyle }}
-        title={getTooltip()}
-      >
-        <div style={styleInner}>
-          {icon && <div style={styleIconContainer}>{icon}</div>}
-          <div style={styleContent}>{getDisplayContent()}</div>
-          <div style={styleSubLabel}>{type === "entrada" ? "E" : "S"}</div>
-        </div>
-      </td>
-
-      {contextMenu.visible && (
-        <StatusMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          onStatusSelect={handleStatusSelect}
-          onClose={handleCloseMenu}
-          currentStatus={currentStatus}
-        />
-      )}
-    </>
+    <td
+      onContextMenu={handleContextMenu}
+      onDoubleClick={handleDoubleClick}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+      style={{ ...styleCell, ...cellStyle }}
+      title={getTooltip()}
+    >
+      <div style={styleInner}>
+        {icon && <div style={styleIconContainer}>{icon}</div>}
+        <div style={styleContent}>{getDisplayContent()}</div>
+        <div style={styleSubLabel}>{type === "entrada" ? "E" : "S"}</div>
+      </div>
+    </td>
   );
 };
 

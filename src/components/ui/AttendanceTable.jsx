@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Business, Person } from "@mui/icons-material";
 import { EditableCell } from "./utils-table/EditableCell";
+import { StatusMenu } from "./utils-table/StatusMenu";
 
 export const AttendanceTable = ({
   empleados,
@@ -10,6 +11,16 @@ export const AttendanceTable = ({
   onStatusChange,
   getCellStatus,
 }) => {
+  const [contextMenu, setContextMenu] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    employeeId: null,
+    dayIndex: null,
+    type: null,
+    currentStatus: null,
+  });
+
   const parseHorario = (horarioString) => {
     if (horarioString.includes("/")) {
       const [entrada, salida] = horarioString.split("/");
@@ -23,6 +34,38 @@ export const AttendanceTable = ({
         salida: { hora: "--", status: horarioString.toLowerCase() },
       };
     }
+  };
+
+  const handleContextMenuOpen = (menuData) => {
+    setContextMenu(menuData);
+  };
+
+  const handleContextMenuClose = () => {
+    setContextMenu({
+      visible: false,
+      x: 0,
+      y: 0,
+      employeeId: null,
+      dayIndex: null,
+      type: null,
+      currentStatus: null,
+    });
+  };
+
+  const handleStatusSelect = (newStatus) => {
+    if (
+      contextMenu.employeeId &&
+      contextMenu.dayIndex !== null &&
+      contextMenu.type
+    ) {
+      onStatusChange(
+        contextMenu.employeeId,
+        contextMenu.dayIndex,
+        contextMenu.type,
+        newStatus
+      );
+    }
+    handleContextMenuClose();
   };
 
   return (
@@ -91,6 +134,7 @@ export const AttendanceTable = ({
                           dayIndex={diaIndex}
                           type="entrada"
                           onStatusChange={onStatusChange}
+                          onContextMenuOpen={handleContextMenuOpen}
                         />
                         <EditableCell
                           horario={{
@@ -105,6 +149,7 @@ export const AttendanceTable = ({
                           dayIndex={diaIndex}
                           type="salida"
                           onStatusChange={onStatusChange}
+                          onContextMenuOpen={handleContextMenuOpen}
                         />
                       </React.Fragment>
                     );
@@ -115,6 +160,17 @@ export const AttendanceTable = ({
           </tbody>
         </table>
       </div>
+
+      {/* StatusMenu renderizado fuera de la tabla */}
+      {contextMenu.visible && (
+        <StatusMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onStatusSelect={handleStatusSelect}
+          onClose={handleContextMenuClose}
+          currentStatus={contextMenu.currentStatus}
+        />
+      )}
     </div>
   );
 };

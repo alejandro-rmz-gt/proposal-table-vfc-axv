@@ -44,7 +44,7 @@ export const generateHorarios = (attendanceEmployees) => {
 const normalizeEmployeesData = (attendanceEmployees) => {
   return attendanceEmployees.map((emp) => ({
     id: emp.id,
-    nombre: emp.name, // ✅ Cambiar 'name' a 'nombre' para que coincida con AttendanceTable
+    nombre: emp.name,
     plaza: emp.plaza,
   }));
 };
@@ -127,7 +127,7 @@ export const AttendanceSystemCVV = () => {
 
         {/* TAB 2 - Contadores */}
         <CountersTable
-          empleados={empleadosNormalizados} // ✅ Usar la misma estructura normalizada
+          empleados={empleadosNormalizados}
           cellStatuses={cellStatuses}
           dias={dias}
         />
@@ -136,46 +136,9 @@ export const AttendanceSystemCVV = () => {
   );
 };
 
-// 🎨 Estilos del contenedor principal
 const styleMainContainer = {
   backgroundColor: "#f5f5f5",
   minHeight: "100vh",
   padding: "24px",
   fontFamily: "system-ui, -apple-system, sans-serif",
-};
-
-const styleHeader = {
-  backgroundColor: "white",
-  padding: "24px",
-  borderRadius: "8px",
-  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-  marginBottom: "24px",
-  textAlign: "center",
-};
-
-const styleTitle = {
-  margin: "0 0 8px 0",
-  fontSize: "24px",
-  color: "#1976d2",
-  fontWeight: "600",
-};
-
-const stylePeriod = {
-  fontSize: "14px",
-  color: "#666",
-  margin: 0,
-};
-
-const styleFooter = {
-  marginTop: "24px",
-  backgroundColor: "#e3f2fd",
-  padding: "16px",
-  borderRadius: "8px",
-  border: "1px solid #bbdefb",
-};
-
-const styleFooterContent = {
-  fontSize: "14px",
-  color: "#1565c0",
-  textAlign: "center",
 };
