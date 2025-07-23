@@ -1,4 +1,3 @@
-// components/ui/CountersTable.jsx
 import React from "react";
 import {
   Business,
@@ -11,7 +10,6 @@ import {
 } from "@mui/icons-material";
 
 export const CountersTable = ({ empleados, cellStatuses, dias }) => {
-  // Definir los tipos de estatus y sus configuraciones
   const statusTypes = [
     { id: "normal", label: "Normal", icon: CheckCircle, color: "#4CAF50" },
     { id: "retardo", label: "Retardos", icon: Warning, color: "#FFC000" },
@@ -20,7 +18,6 @@ export const CountersTable = ({ empleados, cellStatuses, dias }) => {
     { id: "vacaciones", label: "Vacaciones", icon: Event, color: "#FFFF00" },
   ];
 
-  // Calcular contadores para un empleado específico
   const calculateCountersForEmployee = (employeeId) => {
     const counters = {
       normal: 0,
@@ -30,7 +27,6 @@ export const CountersTable = ({ empleados, cellStatuses, dias }) => {
       vacaciones: 0,
     };
 
-    // Contar por cada día y tipo (entrada/salida)
     dias.forEach((_, dayIndex) => {
       ["entrada", "salida"].forEach((type) => {
         const key = `${employeeId}-${dayIndex}-${type}`;
@@ -44,7 +40,6 @@ export const CountersTable = ({ empleados, cellStatuses, dias }) => {
     return counters;
   };
 
-  // Obtener color de fondo para el contador
   const getCounterBadgeStyle = (count, color) => {
     if (count === 0) {
       return {
@@ -62,70 +57,19 @@ export const CountersTable = ({ empleados, cellStatuses, dias }) => {
   };
 
   return (
-    <div
-      style={{
-        backgroundColor: "white",
-        borderRadius: "8px",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-        overflow: "hidden",
-        margin: "0",
-      }}
-    >
-      <div style={{ maxHeight: "600px", overflow: "auto" }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            fontSize: "13px",
-          }}
-        >
-          <thead
-            style={{
-              backgroundColor: "#f8f9fa",
-              position: "sticky",
-              top: 0,
-              zIndex: 1,
-            }}
-          >
+    <div style={styleWrapper}>
+      <div style={styleTableWrapper}>
+        <table style={styleTable}>
+          <thead style={styleThead}>
             <tr>
-              <th
-                style={{
-                  minWidth: "80px",
-                  padding: "16px 12px",
-                  border: "1px solid #e0e0e0",
-                  fontWeight: "bold",
-                  textAlign: "left",
-                  backgroundColor: "#f8f9fa",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                >
+              <th style={styleTh}>
+                <div style={styleThLabel}>
                   <Business sx={{ fontSize: 16 }} />
                   Plaza
                 </div>
               </th>
-              <th
-                style={{
-                  minWidth: "200px",
-                  padding: "16px 12px",
-                  border: "1px solid #e0e0e0",
-                  fontWeight: "bold",
-                  textAlign: "left",
-                  backgroundColor: "#f8f9fa",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                >
+              <th style={styleTh}>
+                <div style={styleThLabel}>
                   <Person sx={{ fontSize: 16 }} />
                   Empleado
                 </div>
@@ -133,32 +77,12 @@ export const CountersTable = ({ empleados, cellStatuses, dias }) => {
               {statusTypes.map((status) => {
                 const IconComponent = status.icon;
                 return (
-                  <th
-                    key={status.id}
-                    style={{
-                      minWidth: "100px",
-                      padding: "12px 8px",
-                      border: "1px solid #e0e0e0",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      fontSize: "12px",
-                      backgroundColor: "#f8f9fa",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: "4px",
-                      }}
-                    >
+                  <th key={status.id} style={styleThStatus}>
+                    <div style={styleThStatusInner}>
                       <IconComponent
                         sx={{ fontSize: 18, color: status.color }}
                       />
-                      <div style={{ fontWeight: "bold", fontSize: "11px" }}>
-                        {status.label}
-                      </div>
+                      <div style={styleThStatusLabel}>{status.label}</div>
                     </div>
                   </th>
                 );
@@ -168,47 +92,17 @@ export const CountersTable = ({ empleados, cellStatuses, dias }) => {
           <tbody>
             {empleados.map((empleado, index) => {
               const counters = calculateCountersForEmployee(empleado.id);
+              const rowStyle = {
+                backgroundColor: index % 2 === 0 ? "#ffffff" : "#f9f9f9",
+              };
 
               return (
-                <tr
-                  key={empleado.id}
-                  style={{
-                    backgroundColor: index % 2 === 0 ? "#ffffff" : "#f9f9f9",
-                  }}
-                >
-                  <td
-                    style={{
-                      padding: "12px",
-                      border: "1px solid #e0e0e0",
-                    }}
-                  >
-                    <span
-                      style={{
-                        backgroundColor: "#1976d2",
-                        color: "white",
-                        padding: "4px 8px",
-                        borderRadius: "12px",
-                        fontSize: "11px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      {empleado.plaza}
-                    </span>
+                <tr key={empleado.id} style={rowStyle}>
+                  <td style={styleTd}>
+                    <span style={stylePlazaBadge}>{empleado.plaza}</span>
                   </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      border: "1px solid #e0e0e0",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontWeight: "500",
-                        fontSize: "13px",
-                      }}
-                    >
-                      {empleado.nombre}
-                    </div>
+                  <td style={styleTd}>
+                    <div style={styleNombre}>{empleado.nombre}</div>
                   </td>
                   {statusTypes.map((status) => {
                     const count = counters[status.id];
@@ -216,30 +110,9 @@ export const CountersTable = ({ empleados, cellStatuses, dias }) => {
                       count,
                       status.color
                     );
-
                     return (
-                      <td
-                        key={status.id}
-                        style={{
-                          padding: "12px",
-                          border: "1px solid #e0e0e0",
-                          textAlign: "center",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            minWidth: "40px",
-                            height: "32px",
-                            borderRadius: "16px",
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            padding: "0 12px",
-                            ...badgeStyle,
-                          }}
-                        >
+                      <td key={status.id} style={styleTdCenter}>
+                        <div style={{ ...styleCounterBadge, ...badgeStyle }}>
                           {count}
                         </div>
                       </td>
@@ -251,25 +124,124 @@ export const CountersTable = ({ empleados, cellStatuses, dias }) => {
           </tbody>
         </table>
       </div>
-
-      {/* Información adicional */}
-      <div
-        style={{
-          padding: "16px",
-          backgroundColor: "#f8f9fa",
-          borderTop: "1px solid #e0e0e0",
-          fontSize: "12px",
-          color: "#666",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <span style={{ fontWeight: "500" }}>💡 Información:</span>
-          Los contadores se actualizan automáticamente cuando modificas la tabla
-          de asistencias. Total de registros por empleado: {dias.length *
-            2}{" "}
-          (entrada + salida por día).
-        </div>
-      </div>
     </div>
   );
+};
+
+const styleWrapper = {
+  backgroundColor: "white",
+  borderRadius: "8px",
+  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  overflow: "hidden",
+  margin: "0",
+};
+
+const styleTableWrapper = {
+  maxHeight: "600px",
+  overflow: "auto",
+};
+
+const styleTable = {
+  width: "100%",
+  borderCollapse: "collapse",
+  fontSize: "13px",
+};
+
+const styleThead = {
+  backgroundColor: "#f8f9fa",
+  position: "sticky",
+  top: 0,
+  zIndex: 1,
+};
+
+const styleTh = {
+  minWidth: "80px",
+  padding: "16px 12px",
+  border: "1px solid #e0e0e0",
+  fontWeight: "bold",
+  textAlign: "left",
+  backgroundColor: "#f8f9fa",
+};
+
+const styleThLabel = {
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+};
+
+const styleThStatus = {
+  minWidth: "100px",
+  padding: "12px 8px",
+  border: "1px solid #e0e0e0",
+  fontWeight: "bold",
+  textAlign: "center",
+  fontSize: "12px",
+  backgroundColor: "#f8f9fa",
+};
+
+const styleThStatusInner = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "4px",
+};
+
+const styleThStatusLabel = {
+  fontWeight: "bold",
+  fontSize: "11px",
+};
+
+const styleTd = {
+  padding: "12px",
+  border: "1px solid #e0e0e0",
+};
+
+const styleTdCenter = {
+  padding: "12px",
+  border: "1px solid #e0e0e0",
+  textAlign: "center",
+};
+
+const stylePlazaBadge = {
+  backgroundColor: "#1976d2",
+  color: "white",
+  padding: "4px 8px",
+  borderRadius: "12px",
+  fontSize: "11px",
+  fontWeight: "500",
+};
+
+const styleNombre = {
+  fontWeight: "500",
+  fontSize: "13px",
+};
+
+const styleCounterBadge = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minWidth: "40px",
+  height: "32px",
+  borderRadius: "16px",
+  fontSize: "14px",
+  fontWeight: "500",
+  padding: "0 12px",
+};
+
+const styleInfo = {
+  padding: "16px",
+  backgroundColor: "#f8f9fa",
+  borderTop: "1px solid #e0e0e0",
+  fontSize: "12px",
+  color: "#666",
+};
+
+const styleInfoRow = {
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+};
+
+const styleInfoStrong = {
+  fontWeight: "500",
 };

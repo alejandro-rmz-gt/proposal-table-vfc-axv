@@ -34,22 +34,12 @@ export const TabsContainer = ({ children }) => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 style={{
-                  flex: 1,
-                  padding: "16px 24px",
-                  border: "none",
-                  background: "transparent",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  fontSize: "14px",
+                  ...styleTabButton,
                   fontWeight: isActive ? "600" : "400",
                   color: isActive ? "#1976d2" : "#666",
                   borderBottom: isActive
                     ? "3px solid #1976d2"
                     : "3px solid transparent",
-                  transition: "all 0.2s ease",
-                  borderRadius: "8px 8px 0 0",
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
@@ -65,18 +55,9 @@ export const TabsContainer = ({ children }) => {
                 }}
               >
                 <IconComponent sx={{ fontSize: 20 }} />
-                <div style={{ textAlign: "left" }}>
+                <div style={styleTabTextContainer}>
                   <div>{tab.label}</div>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      opacity: 0.7,
-                      fontWeight: "normal",
-                      marginTop: "2px",
-                    }}
-                  >
-                    {tab.description}
-                  </div>
+                  <div style={styleTabDescription}>{tab.description}</div>
                 </div>
               </button>
             );
@@ -85,7 +66,7 @@ export const TabsContainer = ({ children }) => {
       </div>
 
       {/* Contenido de la tab activa */}
-      <div style={styleTab}>{children[activeTab]}</div>
+      <div style={styleTabContent}>{children[activeTab]}</div>
     </div>
   );
 };
@@ -102,7 +83,32 @@ const styleBorder = {
   borderBottom: "1px solid #e0e0e0",
 };
 
-const styleTab = {
+const styleTabButton = {
+  flex: 1,
+  padding: "16px 24px",
+  border: "none",
+  background: "transparent",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  fontSize: "14px",
+  transition: "all 0.2s ease",
+  borderRadius: "8px 8px 0 0",
+};
+
+const styleTabTextContainer = {
+  textAlign: "left",
+};
+
+const styleTabDescription = {
+  fontSize: "12px",
+  opacity: 0.7,
+  fontWeight: "normal",
+  marginTop: "2px",
+};
+
+const styleTabContent = {
   backgroundColor: "white",
   borderRadius: "0 0 8px 8px",
   boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
