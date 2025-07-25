@@ -34,11 +34,12 @@ const getDayName = (date) => {
   return days[date.getDay()];
 };
 
-// Generar una semana completa a partir de una fecha
-const generateWeekDays = (startDate) => {
+// Generar días basándose en un rango de fechas
+const generateRangeDays = (startDate, endDate) => {
   const days = [];
-  for (let i = 0; i < 7; i++) {
-    const currentDate = addDays(startDate, i);
+  const currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
     days.push({
       fecha: currentDate.getDate().toString(),
       dia: getDayName(currentDate),
@@ -46,18 +47,21 @@ const generateWeekDays = (startDate) => {
       month: formatDateDisplay(currentDate).split(" ")[1],
       isWeekend: currentDate.getDay() === 0 || currentDate.getDay() === 6,
     });
+
+    currentDate.setDate(currentDate.getDate() + 1);
   }
+
   return days;
 };
 
-// Generar datos de empleados para una semana específica
-const generateWeekData = (startDate, allEmployees) => {
-  const weekDays = generateWeekDays(startDate);
-  const weekDates = weekDays.map((day) => day.fullDate);
+// Generar datos de empleados para un rango de fechas específico
+const generateRangeData = (startDate, endDate, allEmployees) => {
+  const rangeDays = generateRangeDays(startDate, endDate);
+  const rangeDates = rangeDays.map((day) => day.fullDate);
 
   return allEmployees.map((employee) => ({
     ...employee,
-    records: weekDates.map((date) => {
+    records: rangeDates.map((date) => {
       // Buscar si existe un registro para esta fecha
       const existingRecord = employee.records?.find(
         (record) => record.date === date
@@ -147,85 +151,129 @@ const initializeCellStatuses = (attendanceEmployees) => {
 };
 
 /**
- * Hook personalizado para manejar la funcionalidad de asistencia por semanas
- * @param {Array} initialEmployees - Array de empleados con sus datos de asistencia
- * @param {Date} initialWeekStart - Fecha de inicio de la semana inicial (opcional)
- * @returns {Object} Estado y funciones para manejar la asistencia semanal
+ * Hook personalizado para manejar la funcionalidad de asistencia por rangos de fechas
  */
 export const useWeekAttendance = (
   initialEmployees,
   initialWeekStart = null
 ) => {
-  // Estado para la semana actual
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+  // Calcular fechas iniciales
+  const getInitialDates = () => {
     if (initialWeekStart) {
-      return initialWeekStart;
+      const start = new Date(initialWeekStart);
+      const end = addDays(start, 6);
+      return { start, end };
     }
 
     // Inicializar con el lunes de la semana de los datos de prueba
     const testDate = new Date("2024-08-16");
     const monday = new Date(testDate);
     monday.setDate(testDate.getDate() - ((testDate.getDay() + 6) % 7));
-    return monday;
-  });
+    const sunday = addDays(monday, 6);
 
+    return { start: monday, end: sunday };
+  };
+
+  const initialDates = getInitialDates();
+
+  // Estados del hook
+  const [currentRangeStart, setCurrentRangeStart] = useState(
+    initialDates.start
+  );
+  const [currentRangeEnd, setCurrentRangeEnd] = useState(initialDates.end);
   const [cellStatuses, setCellStatuses] = useState({});
-  const [currentWeekData, setCurrentWeekData] = useState([]);
+  const [currentRangeData, setCurrentRangeData] = useState([]);
   const [currentDays, setCurrentDays] = useState([]);
+  const [showWeekPicker, setShowWeekPicker] = useState(false);
+  const [weekPickerPosition, setWeekPickerPosition] = useState({ x: 0, y: 0 });
 
-  // Generar los datos de la semana actual
+  // Generar los datos del rango actual
   useEffect(() => {
-    const weekData = generateWeekData(currentWeekStart, initialEmployees);
-    const weekDays = generateWeekDays(currentWeekStart);
+    const rangeData = generateRangeData(
+      currentRangeStart,
+      currentRangeEnd,
+      initialEmployees
+    );
+    const rangeDays = generateRangeDays(currentRangeStart, currentRangeEnd);
 
-    setCurrentWeekData(weekData);
-    setCurrentDays(weekDays);
+    setCurrentRangeData(rangeData);
+    setCurrentDays(rangeDays);
 
     // Inicializar los status de las celdas
-    const initialStatuses = initializeCellStatuses(weekData);
+    const initialStatuses = initializeCellStatuses(rangeData);
     setCellStatuses(initialStatuses);
 
-    console.log("Semana generada:", {
-      start: formatDate(currentWeekStart),
-      end: formatDate(addDays(currentWeekStart, 6)),
-      days: weekDays,
-      employees: weekData,
+    console.log("Rango generado:", {
+      start: formatDate(currentRangeStart),
+      end: formatDate(currentRangeEnd),
+      totalDays: rangeDays.length,
+      days: rangeDays,
+      employees: rangeData,
     });
-  }, [currentWeekStart, initialEmployees]);
+  }, [currentRangeStart, currentRangeEnd, initialEmployees]);
 
   // Formatear el período actual para mostrar
   const getCurrentWeekDisplay = () => {
-    const endDate = addDays(currentWeekStart, 6);
-    const startStr = formatDateDisplay(currentWeekStart);
-    const endStr = formatDateDisplay(endDate);
-    const year = currentWeekStart.getFullYear();
-
+    const startStr = formatDateDisplay(currentRangeStart);
+    const endStr = formatDateDisplay(currentRangeEnd);
+    const year = currentRangeStart.getFullYear();
     return `${startStr} - ${endStr} ${year}`;
   };
 
-  // Manejar cambios de semana
-  const handleWeekChange = (action) => {
+  // Manejar cambios de rango
+  const handleWeekChange = (action, position = null) => {
     if (action === "previousWeek") {
-      setCurrentWeekStart(addDays(currentWeekStart, -7));
+      // Mover el rango completo hacia atrás
+      const daysDiff = Math.ceil(
+        (currentRangeEnd - currentRangeStart) / (1000 * 60 * 60 * 24)
+      );
+      setCurrentRangeStart(addDays(currentRangeStart, -(daysDiff + 1)));
+      setCurrentRangeEnd(addDays(currentRangeEnd, -(daysDiff + 1)));
     } else if (action === "nextWeek") {
-      setCurrentWeekStart(addDays(currentWeekStart, 7));
+      // Mover el rango completo hacia adelante
+      const daysDiff = Math.ceil(
+        (currentRangeEnd - currentRangeStart) / (1000 * 60 * 60 * 24)
+      );
+      setCurrentRangeStart(addDays(currentRangeStart, daysDiff + 1));
+      setCurrentRangeEnd(addDays(currentRangeEnd, daysDiff + 1));
     } else if (action === "customWeek") {
-      console.log("Abrir selector de semana personalizada");
-      // TODO: Implementar modal de selección de fecha
+      // Abrir el selector de rango
+      setWeekPickerPosition(
+        position || { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+      );
+      setShowWeekPicker(true);
     }
   };
 
-  // Ir a una semana específica
-  const goToWeek = (date) => {
-    const monday = new Date(date);
-    monday.setDate(date.getDate() - ((date.getDay() + 6) % 7));
-    setCurrentWeekStart(monday);
+  // Ir a un rango específico
+  const goToRange = (startDate, endDate) => {
+    setCurrentRangeStart(new Date(startDate));
+    setCurrentRangeEnd(new Date(endDate));
+  };
+
+  // Manejar selección de rango de fechas desde el calendario
+  const handleRangeSelect = (startDate, endDate) => {
+    setCurrentRangeStart(new Date(startDate));
+    setCurrentRangeEnd(new Date(endDate));
+    setShowWeekPicker(false);
+
+    const daysDiff =
+      Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+    console.log(
+      `Rango seleccionado: ${formatDate(startDate)} a ${formatDate(
+        endDate
+      )} (${daysDiff} días)`
+    );
+  };
+
+  // Cerrar el selector de fechas
+  const handleCloseWeekPicker = () => {
+    setShowWeekPicker(false);
   };
 
   // Manejar cambios de hora en las celdas
   const handleTimeChange = (employeeId, dayIndex, type, newTime) => {
-    // Actualizar los datos de la semana actual
-    setCurrentWeekData((prevData) => {
+    setCurrentRangeData((prevData) => {
       return prevData.map((employee) => {
         if (employee.id === employeeId) {
           const updatedRecords = [...employee.records];
@@ -272,14 +320,14 @@ export const useWeekAttendance = (
     return cellStatuses[key] || "normal";
   };
 
-  // Datos procesados para la semana actual
-  const empleadosNormalizados = normalizeEmployeesData(currentWeekData);
-  const horarios = generateHorarios(currentWeekData);
+  // Datos procesados para el rango actual
+  const empleadosNormalizados = normalizeEmployeesData(currentRangeData);
+  const horarios = generateHorarios(currentRangeData);
 
   // Información de debug
   const debugInfo = {
-    weekStart: formatDate(currentWeekStart),
-    weekEnd: formatDate(addDays(currentWeekStart, 6)),
+    rangeStart: formatDate(currentRangeStart),
+    rangeEnd: formatDate(currentRangeEnd),
     totalDays: currentDays.length,
     totalEmployees: empleadosNormalizados.length,
     totalCellStatuses: Object.keys(cellStatuses).length,
@@ -287,9 +335,10 @@ export const useWeekAttendance = (
 
   // Retornar todo lo que el componente necesita
   return {
-    // Estado de la semana
-    currentWeekStart,
-    currentWeekData,
+    // Estado del rango
+    currentRangeStart,
+    currentRangeEnd,
+    currentRangeData,
     currentDays,
 
     // Datos procesados
@@ -302,8 +351,14 @@ export const useWeekAttendance = (
 
     // Funciones de navegación
     handleWeekChange,
-    goToWeek,
+    goToRange,
     getCurrentWeekDisplay,
+
+    // Funciones del selector de fechas
+    handleRangeSelect,
+    handleCloseWeekPicker,
+    showWeekPicker,
+    weekPickerPosition,
 
     // Funciones de manejo de status y tiempo
     handleStatusChange,
@@ -313,13 +368,13 @@ export const useWeekAttendance = (
     // Debug y utilidades
     debugInfo,
 
-    // Funciones auxiliares exportadas (por si se necesitan)
+    // Funciones auxiliares exportadas
     utils: {
       addDays,
       formatDate,
       formatDateDisplay,
       getDayName,
-      generateWeekDays,
+      generateRangeDays,
     },
   };
 };

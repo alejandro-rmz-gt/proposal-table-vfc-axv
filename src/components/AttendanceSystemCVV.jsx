@@ -10,10 +10,11 @@ import { useWeekAttendance } from "../hooks/useWeekAttendance";
 import { AttendanceTable } from "./ui/AttendanceTable";
 import { CountersTable } from "./ui/CountersTable";
 import { TabsContainer } from "./ui/TabsContainer";
+import { WeekPickerCalendar } from "./ui/utils-table/WeekPickerCalendar";
 
 export const AttendanceSystemCVV = () => {
   // Estado para determinar si el usuario es gerente
-  const [esGerente, setEsGerente] = useState(false);
+  const [esGerente, setEsGerente] = useState(false); // Cambiar a true para probar modo gerente
 
   // Usar el hook personalizado para manejar toda la lógica
   const {
@@ -28,6 +29,14 @@ export const AttendanceSystemCVV = () => {
     // Funciones de navegación
     handleWeekChange,
     getCurrentWeekDisplay,
+
+    // Funciones del selector de fechas
+    handleRangeSelect,
+    handleCloseWeekPicker,
+    showWeekPicker,
+    weekPickerPosition,
+    currentRangeStart,
+    currentRangeEnd,
 
     // Funciones de manejo de status y tiempo
     handleStatusChange,
@@ -81,6 +90,17 @@ export const AttendanceSystemCVV = () => {
           dias={currentDays}
         />
       </TabsContainer>
+
+      {/* Mini calendario para seleccionar rango de fechas */}
+      <WeekPickerCalendar
+        isVisible={showWeekPicker}
+        onClose={handleCloseWeekPicker}
+        onRangeSelect={handleRangeSelect}
+        currentStartDate={currentRangeStart}
+        currentEndDate={currentRangeEnd}
+        x={weekPickerPosition.x}
+        y={weekPickerPosition.y}
+      />
     </div>
   );
 };
