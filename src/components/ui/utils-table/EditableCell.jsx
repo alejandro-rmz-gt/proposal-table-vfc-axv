@@ -9,8 +9,9 @@ export const EditableCell = ({
   dayIndex,
   type,
   onStatusChange,
-  onTimeChange, // Nueva prop para cambios de hora
+  onTimeChange,
   onContextMenuOpen,
+  esGerente = false, // Nueva prop
 }) => {
   const [isEditingTime, setIsEditingTime] = useState(false);
   const [hovering, setHovering] = useState(false);
@@ -61,9 +62,12 @@ export const EditableCell = ({
   const cellStyle = getCellStyle(currentStatus);
   const icon = getCellIcon(currentStatus);
 
-  // Obtener el display de la hora basado en el status
+  // Obtener el display de la hora - siempre visible y con valores por defecto
   const getTimeDisplay = () => {
-    // Siempre mostrar la hora, independientemente del status
+    // Si no hay hora definida, mostrar una hora por defecto basada en el tipo
+    if (currentTime === "--" || !currentTime) {
+      return type === "entrada" ? "08:00" : "16:00";
+    }
     return currentTime;
   };
 
@@ -78,13 +82,21 @@ export const EditableCell = ({
   const getTooltip = () => {
     if (hovering) {
       const parts = [];
-      if (currentTime !== "--") {
-        parts.push(`Hora: ${currentTime}`);
+      const displayTime = getTimeDisplay();
+      if (displayTime !== "--") {
+        parts.push(`Hora: ${displayTime}`);
       }
       if (currentStatus !== "normal") {
         parts.push(`Status: ${currentStatus}`);
       }
-      parts.push("Clic izq: editar hora, Clic der: cambiar status");
+      parts.push(`Tipo: ${type === "entrada" ? "Entrada" : "Salida"}`);
+
+      if (esGerente) {
+        parts.push("Clic izq: editar hora, Clic der: cambiar status");
+      } else {
+        parts.push("Clic der: cambiar status (solo gerente puede editar hora)");
+      }
+
       return parts.join(" | ");
     }
     return "";
@@ -92,12 +104,16 @@ export const EditableCell = ({
 
   return (
     <td
-      onClick={handleLeftClick}
+      onClick={esGerente ? handleLeftClick : undefined}
       onContextMenu={handleRightClick}
-      onDoubleClick={handleDoubleClick}
+      onDoubleClick={esGerente ? handleDoubleClick : undefined}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
-      style={{ ...styleCell, ...cellStyle }}
+      style={{
+        ...styleCell,
+        ...cellStyle,
+        cursor: esGerente ? "pointer" : "context-menu", // Solo cursor pointer si es gerente
+      }}
       title={getTooltip()}
     >
       <div style={styleInner}>
@@ -108,13 +124,26 @@ export const EditableCell = ({
         <div style={styleTimeContainer}>
           {isEditingTime ? (
             <TimeEditor
-              initialTime={currentTime}
+              initialTime={getTimeDisplay()}
               onSave={handleTimeSave}
               onCancel={handleTimeCancel}
               isVisible={isEditingTime}
             />
           ) : (
-            <div style={styleTimeDisplay}>{getTimeDisplay()}</div>
+            <div
+              style={{
+                ...styleTimeDisplay,
+                backgroundColor: esGerente
+                  ? "rgba(255, 255, 255, 0.9)"
+                  : "rgba(240, 240, 240, 0.7)",
+                cursor: esGerente ? "pointer" : "default",
+                border: esGerente
+                  ? "1px solid rgba(25, 118, 210, 0.3)"
+                  : "1px solid rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              {getTimeDisplay()}
+            </div>
           )}
         </div>
 
@@ -122,9 +151,6 @@ export const EditableCell = ({
         {getStatusDisplay() && (
           <div style={styleStatusDisplay}>{getStatusDisplay()}</div>
         )}
-
-        {/* Etiqueta de entrada/salida */}
-        <div style={styleSubLabel}>{type === "entrada" ? "E" : "S"}</div>
       </div>
     </td>
   );
@@ -184,11 +210,4 @@ const styleStatusDisplay = {
   padding: "1px 4px",
   borderRadius: "2px",
   border: "1px solid rgba(0, 0, 0, 0.1)",
-};
-
-const styleSubLabel = {
-  fontSize: "8px",
-  color: "#666",
-  opacity: 0.7,
-  fontWeight: "bold",
 };

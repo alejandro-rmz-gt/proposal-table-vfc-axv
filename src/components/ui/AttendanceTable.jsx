@@ -9,8 +9,9 @@ export const AttendanceTable = ({
   horarios,
   cellStatuses,
   onStatusChange,
-  onTimeChange, // Nueva prop para cambios de hora
+  onTimeChange,
   getCellStatus,
+  esGerente = false,
 }) => {
   const [contextMenu, setContextMenu] = useState({
     visible: false,
@@ -137,6 +138,7 @@ export const AttendanceTable = ({
                           onStatusChange={onStatusChange}
                           onTimeChange={onTimeChange}
                           onContextMenuOpen={handleContextMenuOpen}
+                          esGerente={esGerente}
                         />
                         <EditableCell
                           horario={{
@@ -153,6 +155,7 @@ export const AttendanceTable = ({
                           onStatusChange={onStatusChange}
                           onTimeChange={onTimeChange}
                           onContextMenuOpen={handleContextMenuOpen}
+                          esGerente={esGerente}
                         />
                       </React.Fragment>
                     );
