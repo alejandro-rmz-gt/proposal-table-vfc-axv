@@ -13,6 +13,8 @@ export const AttendanceTable = ({
   getCellStatus,
   esGerente = false,
 }) => {
+  // Obtener la plaza (asumiendo que todos los empleados son de la misma plaza)
+  const plaza = empleados.length > 0 ? empleados[0].plaza : "Sin Plaza";
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
@@ -22,6 +24,8 @@ export const AttendanceTable = ({
     type: null,
     currentStatus: null,
   });
+
+  // Ya no necesitamos agrupar por plaza
 
   const parseHorario = (horarioString) => {
     if (horarioString.includes("/")) {
@@ -72,19 +76,19 @@ export const AttendanceTable = ({
 
   return (
     <div style={styleWrapper}>
+      {/* Header de Plaza */}
+      <div style={stylePlazaHeader}>
+        <Business sx={{ fontSize: 18, marginRight: "8px", color: "#1976d2" }} />
+        <span style={stylePlazaTitle}>Plaza: {plaza}</span>
+      </div>
+
       <div style={styleScrollContainer}>
         <table style={styleTable}>
           <thead style={styleThead}>
             <tr>
-              <th style={styleThPlaza}>
-                <div style={styleThLabel}>
-                  <Business sx={{ fontSize: 16 }} />
-                  Plaza
-                </div>
-              </th>
               <th style={styleThEmpleado}>
                 <div style={styleThLabel}>
-                  <Person sx={{ fontSize: 16 }} />
+                  <Person sx={{ fontSize: 14 }} />
                   Empleado
                 </div>
               </th>
@@ -93,12 +97,12 @@ export const AttendanceTable = ({
                   <th style={styleThDia}>
                     <div style={styleDiaTitulo}>{dia.dia}</div>
                     <div style={styleDiaFecha}>{dia.fecha}</div>
-                    <div style={styleDiaTipo}>Entrada</div>
+                    <div style={styleDiaTipo}>E</div>
                   </th>
                   <th style={styleThDia}>
                     <div style={styleDiaTitulo}>{dia.dia}</div>
                     <div style={styleDiaFecha}>{dia.fecha}</div>
-                    <div style={styleDiaTipo}>Salida</div>
+                    <div style={styleDiaTipo}>S</div>
                   </th>
                 </React.Fragment>
               ))}
@@ -112,10 +116,7 @@ export const AttendanceTable = ({
 
               return (
                 <tr key={empleado.id} style={rowStyle}>
-                  <td style={styleTd}>
-                    <span style={stylePlazaBadge}>{empleado.plaza}</span>
-                  </td>
-                  <td style={styleTd}>
+                  <td style={styleTdEmpleado}>
                     <div style={styleNombre}>{empleado.nombre}</div>
                   </td>
                   {horarios[empleado.id].map((horarioString, diaIndex) => {
@@ -183,7 +184,6 @@ export const AttendanceTable = ({
 
 const styleWrapper = {
   backgroundColor: "white",
-  borderRadius: "8px",
   boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
   overflow: "hidden",
 };
@@ -196,7 +196,7 @@ const styleScrollContainer = {
 const styleTable = {
   width: "100%",
   borderCollapse: "collapse",
-  fontSize: "13px",
+  fontSize: "12px",
 };
 
 const styleThead = {
@@ -206,70 +206,72 @@ const styleThead = {
   zIndex: 1,
 };
 
-const styleThPlaza = {
-  minWidth: "80px",
-  padding: "16px 12px",
-  border: "1px solid #e0e0e0",
-  fontWeight: "bold",
-  textAlign: "left",
-  backgroundColor: "#f8f9fa",
-};
-
 const styleThEmpleado = {
-  minWidth: "200px",
-  padding: "16px 12px",
+  minWidth: "160px",
+  padding: "10px 8px",
   border: "1px solid #e0e0e0",
   fontWeight: "bold",
   textAlign: "left",
   backgroundColor: "#f8f9fa",
+  fontSize: "12px",
 };
 
 const styleThDia = {
-  minWidth: "70px",
-  padding: "8px 4px",
+  minWidth: "50px",
+  padding: "6px 3px",
   border: "1px solid #e0e0e0",
   fontWeight: "bold",
   textAlign: "center",
-  fontSize: "11px",
+  fontSize: "10px",
   backgroundColor: "#f8f9fa",
 };
 
 const styleThLabel = {
   display: "flex",
   alignItems: "center",
-  gap: "6px",
+  gap: "4px",
 };
 
 const styleDiaTitulo = {
   fontWeight: "bold",
+  fontSize: "10px",
 };
 
 const styleDiaFecha = {
-  fontSize: "10px",
-  marginTop: "2px",
+  fontSize: "9px",
+  marginTop: "1px",
+  color: "#666",
 };
 
 const styleDiaTipo = {
-  fontSize: "10px",
-  color: "#666",
+  fontSize: "9px",
+  color: "#888",
   marginTop: "1px",
+  fontWeight: "600",
 };
 
-const styleTd = {
-  padding: "12px",
+const styleTdEmpleado = {
+  padding: "8px",
   border: "1px solid #e0e0e0",
-};
-
-const stylePlazaBadge = {
-  backgroundColor: "#1976d2",
-  color: "white",
-  padding: "4px 8px",
-  borderRadius: "12px",
-  fontSize: "11px",
-  fontWeight: "500",
+  verticalAlign: "middle",
 };
 
 const styleNombre = {
   fontWeight: "500",
-  fontSize: "13px",
+  fontSize: "12px",
+  lineHeight: "1.2",
+};
+
+// Estilos para el header de plaza
+const stylePlazaHeader = {
+  backgroundColor: "#1976d2",
+  color: "white",
+  padding: "12px 16px",
+  display: "flex",
+  alignItems: "center",
+};
+
+const stylePlazaTitle = {
+  fontSize: "16px",
+  fontWeight: "600",
 };
