@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, CalendarToday } from "@mui/icons-material";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CalendarToday,
+  Close,
+} from "@mui/icons-material";
 
 export const WeekPickerCalendar = ({
   isVisible,
@@ -16,6 +21,8 @@ export const WeekPickerCalendar = ({
   const [selectedEndDate, setSelectedEndDate] = useState(null);
   const [hoveredDate, setHoveredDate] = useState(null);
   const [isSelectingRange, setIsSelectingRange] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
   // Inicializar con las fechas actuales
   useEffect(() => {
@@ -96,6 +103,19 @@ export const WeekPickerCalendar = ({
     return dateTime >= startTime && dateTime <= endTime;
   };
 
+  // Función para calcular días entre fechas
+  const getDaysBetween = (startDate, endDate) => {
+    if (!startDate || !endDate) return 0;
+    const timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
+    return Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+  };
+
+  // Función para verificar si el rango es válido (menor o igual a 30 días)
+  const isValidRange = (startDate, endDate) => {
+    if (!startDate || !endDate) return false;
+    return getDaysBetween(startDate, endDate) <= 30;
+  };
+
   // Función para obtener el lunes de una semana (necesaria para el calendario)
   const getWeekStart = (date) => {
     const monday = new Date(date);
@@ -126,16 +146,40 @@ export const WeekPickerCalendar = ({
     return days;
   };
 
-  const handleDayClick = (date) => {
+  const handleDayClick = (date, event) => {
     if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
       // Primera selección o reiniciar selección
       setSelectedStartDate(new Date(date));
       setSelectedEndDate(null);
       setIsSelectingRange(true);
+      setShowTooltip(false);
     } else if (selectedStartDate && !selectedEndDate) {
       // Segunda selección
       const startDate = selectedStartDate;
       const endDate = new Date(date);
+
+      // Verificar si el rango es válido antes de permitir la selección
+      const start =
+        startDate.getTime() <= endDate.getTime() ? startDate : endDate;
+      const end =
+        startDate.getTime() <= endDate.getTime() ? endDate : startDate;
+
+      if (!isValidRange(start, end)) {
+        // Mostrar tooltip de error
+        const rect = event.target.getBoundingClientRect();
+        setTooltipPosition({
+          x: rect.left + rect.width / 2,
+          y: rect.top - 10,
+        });
+        setShowTooltip(true);
+
+        // Ocultar tooltip después de 3 segundos
+        setTimeout(() => {
+          setShowTooltip(false);
+        }, 3000);
+
+        return; // No permitir la selección
+      }
 
       // Asegurar que startDate <= endDate
       if (startDate.getTime() > endDate.getTime()) {
@@ -145,11 +189,16 @@ export const WeekPickerCalendar = ({
         setSelectedEndDate(endDate);
       }
       setIsSelectingRange(false);
+      setShowTooltip(false);
     }
   };
 
   const handleConfirmSelection = () => {
-    if (selectedStartDate && selectedEndDate) {
+    if (
+      selectedStartDate &&
+      selectedEndDate &&
+      isValidRange(selectedStartDate, selectedEndDate)
+    ) {
       onRangeSelect(selectedStartDate, selectedEndDate);
       onClose();
     }
@@ -159,6 +208,7 @@ export const WeekPickerCalendar = ({
     setSelectedStartDate(null);
     setSelectedEndDate(null);
     setIsSelectingRange(false);
+    setShowTooltip(false);
   };
 
   const handlePreviousMonth = () => {
@@ -187,158 +237,208 @@ export const WeekPickerCalendar = ({
   const adjustedX = Math.min(x, window.innerWidth - 350);
   const adjustedY = Math.min(y, window.innerHeight - 400);
 
-  return (
-    <div
-      ref={calendarRef}
-      style={{
-        ...styleCalendarContainer,
-        top: adjustedY,
-        left: adjustedX,
-      }}
-    >
-      {/* Header del calendario */}
-      <div style={styleCalendarHeader}>
-        <button onClick={handlePreviousMonth} style={styleNavButton}>
-          <ChevronLeft sx={{ fontSize: 16 }} />
-        </button>
+  // Verificar si el botón confirmar debe estar habilitado
+  const isConfirmEnabled =
+    selectedStartDate &&
+    selectedEndDate &&
+    isValidRange(selectedStartDate, selectedEndDate);
 
-        <div style={styleMonthTitle}>
-          <CalendarToday sx={{ fontSize: 16, marginRight: "6px" }} />
-          {getMonthName(currentMonth)} {currentMonth.getFullYear()}
+  return (
+    <>
+      <div
+        ref={calendarRef}
+        style={{
+          ...styleCalendarContainer,
+          top: adjustedY,
+          left: adjustedX,
+        }}
+      >
+        {/* Header del calendario */}
+        <div style={styleCalendarHeader}>
+          <button onClick={handlePreviousMonth} style={styleNavButton}>
+            <ChevronLeft sx={{ fontSize: 16 }} />
+          </button>
+
+          <div style={styleMonthTitle}>
+            <CalendarToday sx={{ fontSize: 16, marginRight: "6px" }} />
+            {getMonthName(currentMonth)} {currentMonth.getFullYear()}
+          </div>
+
+          <button onClick={handleNextMonth} style={styleNavButton}>
+            <ChevronRight sx={{ fontSize: 16 }} />
+          </button>
         </div>
 
-        <button onClick={handleNextMonth} style={styleNavButton}>
-          <ChevronRight sx={{ fontSize: 16 }} />
-        </button>
-      </div>
+        {/* Días de la semana */}
+        <div style={styleDaysHeader}>
+          {["L", "M", "X", "J", "V", "S", "D"].map((day, index) => (
+            <div key={index} style={styleDayHeaderCell}>
+              {day}
+            </div>
+          ))}
+        </div>
 
-      {/* Días de la semana */}
-      <div style={styleDaysHeader}>
-        {["L", "M", "X", "J", "V", "S", "D"].map((day, index) => (
-          <div key={index} style={styleDayHeaderCell}>
-            {day}
-          </div>
-        ))}
-      </div>
+        {/* Calendario */}
+        <div style={styleCalendarGrid}>
+          {calendarDays.map((date, index) => {
+            const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
+            const isStartDate = isSameDate(date, selectedStartDate);
+            const isEndDate = isSameDate(date, selectedEndDate);
+            const isInRange =
+              selectedStartDate &&
+              selectedEndDate &&
+              isDateInRange(date, selectedStartDate, selectedEndDate);
+            const isHovered = hoveredDate && isSameDate(date, hoveredDate);
+            const isToday = formatDate(date) === formatDate(new Date());
 
-      {/* Calendario */}
-      <div style={styleCalendarGrid}>
-        {calendarDays.map((date, index) => {
-          const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
-          const isStartDate = isSameDate(date, selectedStartDate);
-          const isEndDate = isSameDate(date, selectedEndDate);
-          const isInRange =
-            selectedStartDate &&
-            selectedEndDate &&
-            isDateInRange(date, selectedStartDate, selectedEndDate);
-          const isHovered = hoveredDate && isSameDate(date, hoveredDate);
-          const isToday = formatDate(date) === formatDate(new Date());
-
-          // Crear rango temporal durante la selección
-          const tempEndDate =
-            isSelectingRange && selectedStartDate && hoveredDate
-              ? hoveredDate
-              : selectedEndDate;
-          const isInTempRange =
-            isSelectingRange &&
-            selectedStartDate &&
-            hoveredDate &&
-            isDateInRange(
-              date,
-              selectedStartDate.getTime() <= hoveredDate.getTime()
-                ? selectedStartDate
-                : hoveredDate,
-              selectedStartDate.getTime() <= hoveredDate.getTime()
+            // Crear rango temporal durante la selección
+            const tempEndDate =
+              isSelectingRange && selectedStartDate && hoveredDate
                 ? hoveredDate
-                : selectedStartDate
-            );
+                : selectedEndDate;
+            const isInTempRange =
+              isSelectingRange &&
+              selectedStartDate &&
+              hoveredDate &&
+              isDateInRange(
+                date,
+                selectedStartDate.getTime() <= hoveredDate.getTime()
+                  ? selectedStartDate
+                  : hoveredDate,
+                selectedStartDate.getTime() <= hoveredDate.getTime()
+                  ? hoveredDate
+                  : selectedStartDate
+              );
 
-          return (
-            <button
-              key={index}
-              onClick={() => handleDayClick(date)}
-              onMouseEnter={() => handleDayHover(date)}
-              onMouseLeave={handleDayLeave}
-              style={{
-                ...styleDayCell,
-                opacity: isCurrentMonth ? 1 : 0.3,
-                backgroundColor:
-                  isStartDate || isEndDate
-                    ? "#1976d2"
-                    : isInRange
-                    ? "rgba(25, 118, 210, 0.3)"
-                    : isInTempRange
-                    ? "rgba(25, 118, 210, 0.1)"
-                    : "transparent",
-                color:
-                  isStartDate || isEndDate
-                    ? "white"
-                    : isToday
-                    ? "#1976d2"
-                    : isCurrentMonth
-                    ? "#333"
-                    : "#999",
-                fontWeight:
-                  isToday || isStartDate || isEndDate ? "bold" : "normal",
-                border:
-                  isToday && !isStartDate && !isEndDate
-                    ? "2px solid #1976d2"
-                    : "1px solid transparent",
-              }}
-            >
-              {date.getDate()}
-            </button>
-          );
-        })}
+            // Verificar si este día haría que el rango sea inválido
+            const wouldBeInvalidRange =
+              isSelectingRange &&
+              selectedStartDate &&
+              hoveredDate &&
+              !isValidRange(
+                selectedStartDate.getTime() <= hoveredDate.getTime()
+                  ? selectedStartDate
+                  : hoveredDate,
+                selectedStartDate.getTime() <= hoveredDate.getTime()
+                  ? hoveredDate
+                  : selectedStartDate
+              );
+
+            return (
+              <button
+                key={index}
+                onClick={(event) => handleDayClick(date, event)}
+                onMouseEnter={() => handleDayHover(date)}
+                onMouseLeave={handleDayLeave}
+                style={{
+                  ...styleDayCell,
+                  opacity: isCurrentMonth ? 1 : 0.3,
+                  backgroundColor:
+                    isStartDate || isEndDate
+                      ? "#1976d2"
+                      : isInRange
+                      ? "rgba(25, 118, 210, 0.3)"
+                      : isInTempRange && !wouldBeInvalidRange
+                      ? "rgba(25, 118, 210, 0.1)"
+                      : wouldBeInvalidRange
+                      ? "rgba(244, 67, 54, 0.1)"
+                      : "transparent",
+                  color:
+                    isStartDate || isEndDate
+                      ? "white"
+                      : isToday
+                      ? "#1976d2"
+                      : isCurrentMonth
+                      ? "#333"
+                      : "#999",
+                  fontWeight:
+                    isToday || isStartDate || isEndDate ? "bold" : "normal",
+                  border:
+                    isToday && !isStartDate && !isEndDate
+                      ? "2px solid #1976d2"
+                      : wouldBeInvalidRange
+                      ? "1px solid #f44336"
+                      : "1px solid transparent",
+                  cursor: wouldBeInvalidRange ? "not-allowed" : "pointer",
+                }}
+              >
+                {date.getDate()}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Botones de acción */}
+        <div style={styleActionButtons}>
+          <button onClick={handleClearSelection} style={styleClearButton}>
+            Limpiar
+          </button>
+          <button
+            onClick={handleConfirmSelection}
+            disabled={!isConfirmEnabled}
+            style={{
+              ...styleConfirmButton,
+              opacity: isConfirmEnabled ? 1 : 0.5,
+              cursor: isConfirmEnabled ? "pointer" : "not-allowed",
+            }}
+          >
+            Confirmar
+          </button>
+        </div>
+
+        {/* Footer informativo */}
+        <div style={styleCalendarFooter}>
+          {!selectedStartDate ? (
+            <div style={styleFooterText}>📅 Haz clic en la fecha de inicio</div>
+          ) : !selectedEndDate ? (
+            <div>
+              <div style={styleFooterText}>
+                ✅ Inicio: {formatDisplayDate(selectedStartDate)} - Ahora
+                selecciona la fecha de fin
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div style={styleRangePreview}>
+                📅 Rango: {formatDisplayDate(selectedStartDate)} -{" "}
+                {formatDisplayDate(selectedEndDate)}
+              </div>
+              <div
+                style={{
+                  ...styleFooterText,
+                  color: isValidRange(selectedStartDate, selectedEndDate)
+                    ? "#666"
+                    : "#f44336",
+                }}
+              >
+                ({getDaysBetween(selectedStartDate, selectedEndDate)} días)
+                {!isValidRange(selectedStartDate, selectedEndDate) &&
+                  " - Máximo 30 días"}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Botones de acción */}
-      <div style={styleActionButtons}>
-        <button onClick={handleClearSelection} style={styleClearButton}>
-          Limpiar
-        </button>
-        <button
-          onClick={handleConfirmSelection}
-          disabled={!selectedStartDate || !selectedEndDate}
+      {/* Tooltip de error */}
+      {showTooltip && (
+        <div
           style={{
-            ...styleConfirmButton,
-            opacity: selectedStartDate && selectedEndDate ? 1 : 0.5,
-            cursor:
-              selectedStartDate && selectedEndDate ? "pointer" : "not-allowed",
+            ...styleTooltip,
+            left: tooltipPosition.x - 100, // Centrar el tooltip
+            top: tooltipPosition.y,
           }}
         >
-          Confirmar
-        </button>
-      </div>
-
-      {/* Footer informativo */}
-      <div style={styleCalendarFooter}>
-        {!selectedStartDate ? (
-          <div style={styleFooterText}>📅 Haz clic en la fecha de inicio</div>
-        ) : !selectedEndDate ? (
-          <div>
-            <div style={styleFooterText}>
-              ✅ Inicio: {formatDisplayDate(selectedStartDate)} - Ahora
-              selecciona la fecha de fin
-            </div>
+          <div style={styleTooltipContent}>
+            <Close
+              sx={{ fontSize: 16, color: "#f44336", marginRight: "4px" }}
+            />
+            <span>No se pueden seleccionar más de 30 días</span>
           </div>
-        ) : (
-          <div>
-            <div style={styleRangePreview}>
-              📅 Rango: {formatDisplayDate(selectedStartDate)} -{" "}
-              {formatDisplayDate(selectedEndDate)}
-            </div>
-            <div style={styleFooterText}>
-              (
-              {Math.ceil(
-                (selectedEndDate - selectedStartDate) / (1000 * 60 * 60 * 24)
-              ) + 1}{" "}
-              días)
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+          <div style={styleTooltipArrow}></div>
+        </div>
+      )}
+    </>
   );
 };
 
@@ -474,4 +574,37 @@ const styleWeekPreview = {
   fontSize: "12px",
   color: "#1976d2",
   fontWeight: "500",
+};
+
+const styleTooltip = {
+  position: "fixed",
+  zIndex: 1001,
+  backgroundColor: "#f44336",
+  color: "white",
+  padding: "8px 12px",
+  borderRadius: "6px",
+  fontSize: "12px",
+  fontWeight: "500",
+  boxShadow: "0 4px 12px rgba(244, 67, 54, 0.3)",
+  animation: "fadeIn 0.2s ease-out",
+  width: "200px",
+  textAlign: "center",
+};
+
+const styleTooltipContent = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const styleTooltipArrow = {
+  position: "absolute",
+  bottom: "-6px",
+  left: "50%",
+  transform: "translateX(-50%)",
+  width: "0",
+  height: "0",
+  borderLeft: "6px solid transparent",
+  borderRight: "6px solid transparent",
+  borderTop: "6px solid #f44336",
 };
