@@ -5,10 +5,22 @@ import {
   CalendarToday,
   ChevronLeft,
   ChevronRight,
+  FileDownload,
+  GetApp,
 } from "@mui/icons-material";
 
-export const TabsContainer = ({ children, currentWeek, onWeekChange }) => {
-  const [activeTab, setActiveTab] = useState(0);
+export const TabsContainer = ({ 
+  children, 
+  currentWeek, 
+  onWeekChange,
+  onExportCurrent,
+  onExportAll,
+  activeTab: controlledActiveTab 
+}) => {
+  const [activeTab, setActiveTab] = useState(controlledActiveTab || 0);
+
+  // Usar tab controlada si se proporciona
+  const currentActiveTab = controlledActiveTab !== undefined ? controlledActiveTab : activeTab;
 
   const tabs = [
     {
@@ -25,6 +37,12 @@ export const TabsContainer = ({ children, currentWeek, onWeekChange }) => {
     },
   ];
 
+  const handleTabClick = (tabId) => {
+    if (controlledActiveTab === undefined) {
+      setActiveTab(tabId);
+    }
+  };
+
   const handlePreviousWeek = () => {
     if (onWeekChange) {
       onWeekChange("previousWeek");
@@ -37,9 +55,26 @@ export const TabsContainer = ({ children, currentWeek, onWeekChange }) => {
     }
   };
 
-  const handleCustomWeek = () => {
+  const handleCustomWeek = (e) => {
     if (onWeekChange) {
-      onWeekChange("customWeek");
+      const rect = e.target.getBoundingClientRect();
+      const position = {
+        x: rect.left,
+        y: rect.bottom + 5
+      };
+      onWeekChange("customWeek", position);
+    }
+  };
+
+  const handleExportCurrent = () => {
+    if (onExportCurrent) {
+      onExportCurrent(currentActiveTab);
+    }
+  };
+
+  const handleExportAll = () => {
+    if (onExportAll) {
+      onExportAll();
     }
   };
 
@@ -52,12 +87,12 @@ export const TabsContainer = ({ children, currentWeek, onWeekChange }) => {
           <div style={styleTabsContainer}>
             {tabs.map((tab) => {
               const IconComponent = tab.icon;
-              const isActive = activeTab === tab.id;
+              const isActive = currentActiveTab === tab.id;
 
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabClick(tab.id)}
                   style={{
                     ...styleTabButton,
                     fontWeight: isActive ? "600" : "400",
@@ -89,63 +124,103 @@ export const TabsContainer = ({ children, currentWeek, onWeekChange }) => {
             })}
           </div>
 
-          {/* Selector de semanas del lado derecho */}
-          <div style={styleDateSelectorContainer}>
-            <div style={styleDateSelector}>
+          {/* Controles del lado derecho */}
+          <div style={styleRightControls}>
+            {/* Botones de exportación */}
+            <div style={styleExportButtons}>
               <button
-                style={styleDateNavButton}
-                onClick={handlePreviousWeek}
-                title="Semana anterior"
+                onClick={handleExportCurrent}
+                style={styleExportButton}
+                title={`Exportar ${currentActiveTab === 0 ? 'Asistencias' : 'Contadores'}`}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "rgba(25, 118, 210, 0.1)";
+                  e.target.style.backgroundColor = "rgba(76, 175, 80, 0.1)";
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+                  e.target.style.backgroundColor = "rgba(76, 175, 80, 0.05)";
                 }}
               >
-                <ChevronLeft sx={{ fontSize: 18 }} />
+                <FileDownload sx={{ fontSize: 18 }} />
+                <span style={styleExportButtonText}>
+                  Exportar {currentActiveTab === 0 ? 'Asistencias' : 'Contadores'}
+                </span>
               </button>
-
+              
               <button
-                style={styleDateDisplay}
-                onClick={handleCustomWeek}
-                title="Seleccionar semana personalizada"
+                onClick={handleExportAll}
+                style={styleExportAllButton}
+                title="Exportar Reporte Completo"
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "rgba(25, 118, 210, 0.1)";
+                  e.target.style.backgroundColor = "rgba(76, 175, 80, 0.15)";
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "transparent";
+                  e.target.style.backgroundColor = "rgba(76, 175, 80, 0.1)";
                 }}
               >
-                <CalendarToday sx={{ fontSize: 16, marginRight: "6px" }} />
-                <div style={styleDateText}>
-                  <div style={styleDateRange}>
-                    {currentWeek || "16 - 22 Agosto 2024"}
+                <GetApp sx={{ fontSize: 18 }} />
+                <span style={styleExportButtonText}>
+                  Exportar Todo
+                </span>
+              </button>
+            </div>
+
+            {/* Selector de semanas */}
+            <div style={styleDateSelectorContainer}>
+              <div style={styleDateSelector}>
+                <button
+                  style={styleDateNavButton}
+                  onClick={handlePreviousWeek}
+                  title="Semana anterior"
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = "rgba(25, 118, 210, 0.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+                  }}
+                >
+                  <ChevronLeft sx={{ fontSize: 18 }} />
+                </button>
+
+                <button
+                  style={styleDateDisplay}
+                  onClick={handleCustomWeek}
+                  title="Seleccionar semana personalizada"
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = "rgba(25, 118, 210, 0.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = "transparent";
+                  }}
+                >
+                  <CalendarToday sx={{ fontSize: 16, marginRight: "6px" }} />
+                  <div style={styleDateText}>
+                    <div style={styleDateRange}>
+                      {currentWeek || "16 - 22 Agosto 2024"}
+                    </div>
+                    <div style={styleDateSubtext}>Rango personalizable</div>
                   </div>
-                  <div style={styleDateSubtext}>Semana completa (7 días)</div>
-                </div>
-              </button>
+                </button>
 
-              <button
-                style={styleDateNavButton}
-                onClick={handleNextWeek}
-                title="Semana siguiente"
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "rgba(25, 118, 210, 0.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
-                }}
-              >
-                <ChevronRight sx={{ fontSize: 18 }} />
-              </button>
+                <button
+                  style={styleDateNavButton}
+                  onClick={handleNextWeek}
+                  title="Semana siguiente"
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = "rgba(25, 118, 210, 0.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+                  }}
+                >
+                  <ChevronRight sx={{ fontSize: 18 }} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Contenido de la tab activa */}
-      <div style={styleTabContent}>{children[activeTab]}</div>
+      <div style={styleTabContent}>{children[currentActiveTab]}</div>
     </div>
   );
 };
@@ -168,6 +243,53 @@ const styleBorder = {
 const styleTabsContainer = {
   display: "flex",
   flex: 1,
+};
+
+const styleRightControls = {
+  display: "flex",
+  alignItems: "center",
+  gap: "16px",
+};
+
+const styleExportButtons = {
+  display: "flex",
+  gap: "8px",
+  alignItems: "center",
+};
+
+const styleExportButton = {
+  backgroundColor: "rgba(76, 175, 80, 0.05)",
+  border: "1px solid rgba(76, 175, 80, 0.3)",
+  borderRadius: "6px",
+  padding: "8px 12px",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  color: "#4caf50",
+  fontSize: "13px",
+  fontWeight: "500",
+  transition: "all 0.2s ease",
+};
+
+const styleExportAllButton = {
+  backgroundColor: "rgba(76, 175, 80, 0.1)",
+  border: "1px solid rgba(76, 175, 80, 0.4)",
+  borderRadius: "6px",
+  padding: "8px 12px",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  color: "#2e7d32",
+  fontSize: "13px",
+  fontWeight: "600",
+  transition: "all 0.2s ease",
+};
+
+const styleExportButtonText = {
+  fontSize: "12px",
+  fontWeight: "inherit",
 };
 
 const styleTabButton = {

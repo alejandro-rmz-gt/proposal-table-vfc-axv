@@ -5,6 +5,7 @@ import { testData } from "../data/testData";
 
 // Hook personalizado
 import { useWeekAttendance } from "../hooks/useWeekAttendance";
+import { useExportAttendance } from "../hooks/useExportAttendance";
 
 // Componentes de UI
 import { AttendanceTable } from "./ui/AttendanceTable";
@@ -14,7 +15,13 @@ import { WeekPickerCalendar } from "./ui/utils-table/WeekPickerCalendar";
 
 export const AttendanceSystemCVV = () => {
   // Estado para determinar si el usuario es gerente
-  const [esGerente, setEsGerente] = useState(false); // Cambiar a true para probar modo gerente
+  const [esGerente, setEsGerente] = useState(false);
+  
+  // Estado para controlar la tab activa
+  const [activeTab, setActiveTab] = useState(0);
+
+  // Hook para exportación
+  const { exportToExcel, exportBothTabs } = useExportAttendance();
 
   // Usar el hook personalizado para manejar toda la lógica
   const {
@@ -47,6 +54,43 @@ export const AttendanceSystemCVV = () => {
     debugInfo,
   } = useWeekAttendance(testData.attendanceData.employees);
 
+  // Funciones de exportación
+  const handleExportCurrent = (tabIndex = activeTab) => {
+    const result = exportToExcel(
+      empleadosNormalizados,
+      currentDays,
+      horarios,
+      cellStatuses,
+      getCellStatus,
+      tabIndex
+    );
+    
+    if (result.success) {
+      // Mostrar notificación de éxito (puedes reemplazar con tu sistema de notificaciones)
+      console.log(`✅ Exportación exitosa: ${result.fileName}`);
+      // Aquí puedes agregar una notificación visual si tienes un sistema de toast/alerts
+    } else {
+      console.error(`❌ Error en exportación: ${result.error}`);
+      // Aquí puedes mostrar un mensaje de error al usuario
+    }
+  };
+
+  const handleExportAll = () => {
+    const result = exportBothTabs(
+      empleadosNormalizados,
+      currentDays,
+      horarios,
+      cellStatuses,
+      getCellStatus
+    );
+    
+    if (result.success) {
+      console.log(`✅ Exportación completa exitosa: ${result.fileName}`);
+    } else {
+      console.error(`❌ Error en exportación completa: ${result.error}`);
+    }
+  };
+
   // Log de debug (opcional)
   console.log("AttendanceSystemCVV - Debug:", debugInfo);
   console.log("Es Gerente:", esGerente);
@@ -66,10 +110,13 @@ export const AttendanceSystemCVV = () => {
         </span>
       </div>
 
-      {/* Container de tabs con selector de semana */}
+      {/* Container de tabs con selector de semana y exportación */}
       <TabsContainer
         currentWeek={getCurrentWeekDisplay()}
         onWeekChange={handleWeekChange}
+        onExportCurrent={handleExportCurrent}
+        onExportAll={handleExportAll}
+        activeTab={activeTab}
       >
         {/* TAB 1 - Asistencia */}
         <AttendanceTable
@@ -80,7 +127,7 @@ export const AttendanceSystemCVV = () => {
           onStatusChange={handleStatusChange}
           onTimeChange={handleTimeChange}
           getCellStatus={getCellStatus}
-          esGerente={esGerente} // Nueva prop
+          esGerente={esGerente}
         />
 
         {/* TAB 2 - Contadores */}
