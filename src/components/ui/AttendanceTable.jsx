@@ -55,7 +55,7 @@ export const AttendanceTable = ({
         Plaza: empleado.plaza,
       };
 
-      // Agregar columnas para cada día
+      // Agregar columnas para cada día con formato más claro
       dias.forEach((dia, diaIndex) => {
         const horarioString = horarios[empleado.id][diaIndex];
         const horarioData = parseHorario(horarioString);
@@ -64,24 +64,31 @@ export const AttendanceTable = ({
         const entradaStatus = getCellStatus(empleado.id, diaIndex, "entrada");
         const salidaStatus = getCellStatus(empleado.id, diaIndex, "salida");
 
-        // Formatear la fecha para la columna
-        const fechaCol = `${dia.dia}_${dia.fecha}`;
+        // Formatear la fecha de manera más legible
+        const fechaLegible = `${dia.dia} ${dia.fecha}`;
 
         // Si ambos tienen el mismo status especial, mostrar solo el status
         if (entradaStatus === salidaStatus && entradaStatus !== "normal") {
-          row[`${fechaCol}_Entrada`] = entradaStatus.toUpperCase();
-          row[`${fechaCol}_Salida`] = entradaStatus.toUpperCase();
+          row[`${fechaLegible} - Entrada`] = entradaStatus.toUpperCase();
+          row[`${fechaLegible} - Salida`] = entradaStatus.toUpperCase();
         } else {
-          // Mostrar horarios con status si es necesario
-          row[`${fechaCol}_Entrada`] =
+          // Mostrar horarios normales o con status
+          const entradaText =
             entradaStatus === "normal"
               ? horarioData.entrada.hora
+              : horarioData.entrada.hora === "--"
+              ? entradaStatus.toUpperCase()
               : `${horarioData.entrada.hora} (${entradaStatus.toUpperCase()})`;
 
-          row[`${fechaCol}_Salida`] =
+          const salidaText =
             salidaStatus === "normal"
               ? horarioData.salida.hora
+              : horarioData.salida.hora === "--"
+              ? salidaStatus.toUpperCase()
               : `${horarioData.salida.hora} (${salidaStatus.toUpperCase()})`;
+
+          row[`${fechaLegible} - Entrada`] = entradaText;
+          row[`${fechaLegible} - Salida`] = salidaText;
         }
       });
 
@@ -108,7 +115,7 @@ export const AttendanceTable = ({
     };
   };
 
-  // Generar nombre de archivo dinámico
+  // Generar nombre de archivo dinámico (sin timestamp automático)
   const getExportFilename = () => {
     const startDate = currentRangeStart
       ? currentRangeStart.toLocaleDateString("es-ES").replace(/\//g, "-")
@@ -117,7 +124,18 @@ export const AttendanceTable = ({
       ? currentRangeEnd.toLocaleDateString("es-ES").replace(/\//g, "-")
       : "";
 
-    return `${exportFilename}_${plaza}_${startDate}_${endDate}`;
+    const timestamp = new Date()
+      .toLocaleString("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+      .replace(/[/:]/g, "-")
+      .replace(", ", "_");
+
+    return `${exportFilename}_${startDate}_al_${endDate}_${timestamp}`;
   };
 
   // Callbacks para exportación

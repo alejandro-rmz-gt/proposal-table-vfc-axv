@@ -127,7 +127,7 @@ export const useExportButton = ({
           CreatedDate: new Date(),
         };
 
-        // Generar archivo y descargar
+        // Generar archivo y descargar sin timestamp duplicado
         const excelBuffer = XLSX.write(workbook, {
           bookType: "xlsx",
           type: "array",
@@ -138,7 +138,7 @@ export const useExportButton = ({
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
 
-        saveAs(blob, `${customFilename}_${getCurrentDateTime()}.xlsx`);
+        saveAs(blob, `${customFilename}.xlsx`);
 
         return {
           success: true,
@@ -176,7 +176,7 @@ export const useExportButton = ({
           type: "text/csv;charset=utf-8;",
         });
 
-        saveAs(blob, `${customFilename}_${getCurrentDateTime()}.csv`);
+        saveAs(blob, `${customFilename}.csv`);
 
         return {
           success: true,
@@ -205,7 +205,8 @@ export const useExportButton = ({
         setIsExporting(true);
         setExportError(null);
 
-        const doc = new jsPDF();
+        // Usar orientación horizontal para más columnas
+        const doc = new jsPDF("landscape");
 
         // Configurar documento
         doc.setFontSize(16);
@@ -221,27 +222,37 @@ export const useExportButton = ({
           columns.map((col) => item[col] || "")
         );
 
-        // Crear tabla
+        // Crear tabla con mejor configuración
         autoTable(doc, {
           head: [columns],
           body: rows,
           startY: 35,
           styles: {
-            fontSize: 8,
-            cellPadding: 2,
+            fontSize: 6, // Más pequeño para que quepa
+            cellPadding: 1,
+            overflow: "linebreak",
+            cellWidth: "wrap",
           },
           headStyles: {
-            fillColor: [25, 118, 210], // Color azul del sistema
+            fillColor: [25, 118, 210],
             textColor: 255,
             fontStyle: "bold",
+            fontSize: 7,
           },
           alternateRowStyles: {
             fillColor: [245, 245, 245],
           },
+          columnStyles: {
+            0: { cellWidth: 40 }, // Empleado más ancho
+            1: { cellWidth: 15 }, // Plaza más angosta
+          },
+          margin: { top: 40, right: 10, bottom: 10, left: 10 },
+          pageBreak: "auto",
+          showHead: "everyPage",
         });
 
-        // Guardar archivo
-        doc.save(`${customFilename}_${getCurrentDateTime()}.pdf`);
+        // Guardar archivo sin timestamp duplicado
+        doc.save(`${customFilename}.pdf`);
 
         return {
           success: true,
