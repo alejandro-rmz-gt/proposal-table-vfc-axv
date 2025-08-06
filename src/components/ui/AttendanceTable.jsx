@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Business, Person } from "@mui/icons-material";
 import { EditableCell } from "./utils-table/EditableCell";
 import { StatusMenu } from "./utils-table/StatusMenu";
+import { ExportButton } from "./utils-table/ExportButton";
 
 export const AttendanceTable = ({
   empleados,
@@ -12,6 +13,10 @@ export const AttendanceTable = ({
   onTimeChange,
   getCellStatus,
   esGerente = false,
+  // Nuevas props para exportación
+  currentRangeStart,
+  currentRangeEnd,
+  exportFilename = "Asistencias",
 }) => {
   // Obtener la plaza (asumiendo que todos los empleados son de la misma plaza)
   const plaza = empleados.length > 0 ? empleados[0].plaza : "Sin Plaza";
@@ -24,8 +29,6 @@ export const AttendanceTable = ({
     type: null,
     currentStatus: null,
   });
-
-  // Ya no necesitamos agrupar por plaza
 
   const parseHorario = (horarioString) => {
     if (horarioString.includes("/")) {
@@ -40,6 +43,96 @@ export const AttendanceTable = ({
         salida: { hora: "--", status: horarioString.toLowerCase() },
       };
     }
+  };
+
+  // Función para preparar datos para exportación
+  const prepareDataForExport = () => {
+    const exportData = [];
+
+    empleados.forEach((empleado) => {
+      const row = {
+        Empleado: empleado.nombre,
+        Plaza: empleado.plaza,
+      };
+
+      // Agregar columnas para cada día
+      dias.forEach((dia, diaIndex) => {
+        const horarioString = horarios[empleado.id][diaIndex];
+        const horarioData = parseHorario(horarioString);
+
+        // Obtener status actual de las celdas
+        const entradaStatus = getCellStatus(empleado.id, diaIndex, "entrada");
+        const salidaStatus = getCellStatus(empleado.id, diaIndex, "salida");
+
+        // Formatear la fecha para la columna
+        const fechaCol = `${dia.dia}_${dia.fecha}`;
+
+        // Si ambos tienen el mismo status especial, mostrar solo el status
+        if (entradaStatus === salidaStatus && entradaStatus !== "normal") {
+          row[`${fechaCol}_Entrada`] = entradaStatus.toUpperCase();
+          row[`${fechaCol}_Salida`] = entradaStatus.toUpperCase();
+        } else {
+          // Mostrar horarios con status si es necesario
+          row[`${fechaCol}_Entrada`] =
+            entradaStatus === "normal"
+              ? horarioData.entrada.hora
+              : `${horarioData.entrada.hora} (${entradaStatus.toUpperCase()})`;
+
+          row[`${fechaCol}_Salida`] =
+            salidaStatus === "normal"
+              ? horarioData.salida.hora
+              : `${horarioData.salida.hora} (${salidaStatus.toUpperCase()})`;
+        }
+      });
+
+      exportData.push(row);
+    });
+
+    return exportData;
+  };
+
+  // Preparar metadatos para la exportación
+  const getExportMetadata = () => {
+    const startDate = currentRangeStart
+      ? currentRangeStart.toLocaleDateString("es-ES")
+      : "";
+    const endDate = currentRangeEnd
+      ? currentRangeEnd.toLocaleDateString("es-ES")
+      : "";
+
+    return {
+      title: `Reporte de Asistencias - Plaza ${plaza}`,
+      subject: `Asistencias del ${startDate} al ${endDate}`,
+      author: "Sistema de Asistencias CVV",
+      description: `Reporte generado para ${empleados.length} empleados`,
+    };
+  };
+
+  // Generar nombre de archivo dinámico
+  const getExportFilename = () => {
+    const startDate = currentRangeStart
+      ? currentRangeStart.toLocaleDateString("es-ES").replace(/\//g, "-")
+      : "";
+    const endDate = currentRangeEnd
+      ? currentRangeEnd.toLocaleDateString("es-ES").replace(/\//g, "-")
+      : "";
+
+    return `${exportFilename}_${plaza}_${startDate}_${endDate}`;
+  };
+
+  // Callbacks para exportación
+  const handleExportSuccess = (result, format) => {
+    console.log(
+      `✅ Exportación exitosa en formato ${format.toUpperCase()}:`,
+      result
+    );
+  };
+
+  const handleExportError = (error, format) => {
+    console.error(
+      `❌ Error exportando en formato ${format.toUpperCase()}:`,
+      error
+    );
   };
 
   const handleContextMenuOpen = (menuData) => {
@@ -76,10 +169,47 @@ export const AttendanceTable = ({
 
   return (
     <div style={styleWrapper}>
-      {/* Header de Plaza */}
+      {/* Header de Plaza con botón de exportación */}
       <div style={stylePlazaHeader}>
-        <Business sx={{ fontSize: 18, marginRight: "8px", color: "#1976d2" }} />
-        <span style={stylePlazaTitle}>Plaza: {plaza}</span>
+        <div style={stylePlazaInfo}>
+          <Business sx={{ fontSize: 18, marginRight: "8px", color: "white" }} />
+          <span style={stylePlazaTitle}>Plaza: {plaza}</span>
+          <span style={stylePlazaSubtitle}>
+            {empleados.length} empleado{empleados.length !== 1 ? "s" : ""} •
+            {dias.length} día{dias.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+
+        {/* Botón de exportación */}
+        <div style={styleExportContainer}>
+          <ExportButton
+            data={prepareDataForExport()}
+            filename={getExportFilename()}
+            formats={["xlsx", "csv", "pdf"]}
+            metadata={getExportMetadata()}
+            title="Exportar"
+            size="medium"
+            variant="contained"
+            customStyles={{
+              button: {
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                color: "white",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                backdropFilter: "blur(10px)",
+              },
+              container: {
+                zIndex: 10,
+              },
+            }}
+            onSuccess={handleExportSuccess}
+            onError={handleExportError}
+            onExportStart={(format) => {
+              console.log(
+                `🚀 Iniciando exportación en formato ${format.toUpperCase()}...`
+              );
+            }}
+          />
+        </div>
       </div>
 
       <div style={styleScrollContainer}>
@@ -182,6 +312,7 @@ export const AttendanceTable = ({
   );
 };
 
+// Estilos existentes
 const styleWrapper = {
   backgroundColor: "white",
   boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
@@ -262,16 +393,36 @@ const styleNombre = {
   lineHeight: "1.2",
 };
 
-// Estilos para el header de plaza
+// Estilos modificados para el header de plaza
 const stylePlazaHeader = {
   backgroundColor: "#1976d2",
   color: "white",
   padding: "12px 16px",
   display: "flex",
   alignItems: "center",
+  justifyContent: "space-between", // Cambio para distribuir espacio
+};
+
+// Nuevos estilos
+const stylePlazaInfo = {
+  display: "flex",
+  alignItems: "center",
+  flex: 1,
 };
 
 const stylePlazaTitle = {
   fontSize: "16px",
   fontWeight: "600",
+  marginRight: "12px",
+};
+
+const stylePlazaSubtitle = {
+  fontSize: "12px",
+  opacity: 0.8,
+  fontWeight: "normal",
+};
+
+const styleExportContainer = {
+  display: "flex",
+  alignItems: "center",
 };

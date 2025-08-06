@@ -47,9 +47,27 @@ export const AttendanceSystemCVV = () => {
     debugInfo,
   } = useWeekAttendance(testData.attendanceData.employees);
 
+  // Función para generar nombre de archivo dinámico para exportación
+  const getExportFilename = () => {
+    const startDate = currentRangeStart
+      ? currentRangeStart.toLocaleDateString("es-ES").replace(/\//g, "-")
+      : "";
+    const endDate = currentRangeEnd
+      ? currentRangeEnd.toLocaleDateString("es-ES").replace(/\//g, "-")
+      : "";
+
+    return `Asistencias_CVV20_${startDate}_${endDate}`;
+  };
+
   // Log de debug (opcional)
   console.log("AttendanceSystemCVV - Debug:", debugInfo);
   console.log("Es Gerente:", esGerente);
+  console.log("Rango actual:", {
+    inicio: currentRangeStart?.toLocaleDateString("es-ES"),
+    fin: currentRangeEnd?.toLocaleDateString("es-ES"),
+    totalDias: currentDays.length,
+    totalEmpleados: empleadosNormalizados.length,
+  });
 
   return (
     <div style={styleMainContainer}>
@@ -64,6 +82,15 @@ export const AttendanceSystemCVV = () => {
         <span style={styleDebugLabel}>
           {esGerente ? "Puedes editar horas" : "Solo puedes cambiar status"}
         </span>
+
+        {/* Info adicional para debug de exportación */}
+        <div style={styleDebugInfo}>
+          <span style={styleDebugInfoText}>
+            📊 {empleadosNormalizados.length} empleados • 📅{" "}
+            {currentDays.length} días • 📋 {Object.keys(cellStatuses).length}{" "}
+            estados
+          </span>
+        </div>
       </div>
 
       {/* Container de tabs con selector de semana */}
@@ -80,7 +107,11 @@ export const AttendanceSystemCVV = () => {
           onStatusChange={handleStatusChange}
           onTimeChange={handleTimeChange}
           getCellStatus={getCellStatus}
-          esGerente={esGerente} // Nueva prop
+          esGerente={esGerente}
+          // 🆕 Nuevas props para exportación
+          currentRangeStart={currentRangeStart}
+          currentRangeEnd={currentRangeEnd}
+          exportFilename={getExportFilename()}
         />
 
         {/* TAB 2 - Contadores */}
@@ -88,6 +119,9 @@ export const AttendanceSystemCVV = () => {
           empleados={empleadosNormalizados}
           cellStatuses={cellStatuses}
           dias={currentDays}
+          // 🆕 Props para exportación también en contadores (opcional)
+          currentRangeStart={currentRangeStart}
+          currentRangeEnd={currentRangeEnd}
         />
       </TabsContainer>
 
@@ -121,6 +155,7 @@ const styleDebugContainer = {
   display: "flex",
   alignItems: "center",
   gap: "12px",
+  flexWrap: "wrap", // Para que se adapte en pantallas pequeñas
 };
 
 const styleDebugButton = {
@@ -139,4 +174,19 @@ const styleDebugLabel = {
   fontSize: "14px",
   color: "#666",
   fontStyle: "italic",
+};
+
+// 🆕 Nuevos estilos para info de debug
+const styleDebugInfo = {
+  marginLeft: "auto",
+  padding: "4px 8px",
+  backgroundColor: "#f8f9fa",
+  borderRadius: "4px",
+  border: "1px solid #e0e0e0",
+};
+
+const styleDebugInfoText = {
+  fontSize: "12px",
+  color: "#666",
+  fontWeight: "500",
 };
