@@ -194,7 +194,7 @@ export const useExportButton = ({
     [getCurrentDateTime]
   );
 
-  // Exportar a PDF (requiere instalación de jsPDF)
+  // Exportar a PDF (mejorado para manejar muchas columnas)
   const exportToPDF = useCallback(
     async (processedData, customFilename) => {
       try {
@@ -205,15 +205,19 @@ export const useExportButton = ({
         setIsExporting(true);
         setExportError(null);
 
-        // Usar orientación horizontal para más columnas
-        const doc = new jsPDF("landscape");
+        // Usar formato A4 horizontal para más espacio
+        const doc = new jsPDF({
+          orientation: "landscape",
+          unit: "mm",
+          format: "a4",
+        });
 
         // Configurar documento
         doc.setFontSize(16);
-        doc.text(metadata.title || "Reporte de Datos", 14, 22);
+        doc.text(metadata.title || "Reporte de Datos", 14, 15);
 
-        doc.setFontSize(10);
-        doc.text(`Generado: ${getCurrentDateTime()}`, 14, 30);
+        doc.setFontSize(9);
+        doc.text(`Generado: ${getCurrentDateTime()}`, 14, 22);
 
         // Obtener columnas y datos para la tabla
         const columns =
@@ -222,36 +226,107 @@ export const useExportButton = ({
           columns.map((col) => item[col] || "")
         );
 
-        // Crear tabla con mejor configuración
-        autoTable(doc, {
-          head: [columns],
-          body: rows,
-          startY: 35,
-          styles: {
-            fontSize: 6, // Más pequeño para que quepa
-            cellPadding: 1,
-            overflow: "linebreak",
-            cellWidth: "wrap",
-          },
-          headStyles: {
-            fillColor: [25, 118, 210],
-            textColor: 255,
-            fontStyle: "bold",
-            fontSize: 7,
-          },
-          alternateRowStyles: {
-            fillColor: [245, 245, 245],
-          },
-          columnStyles: {
-            0: { cellWidth: 40 }, // Empleado más ancho
-            1: { cellWidth: 15 }, // Plaza más angosta
-          },
-          margin: { top: 40, right: 10, bottom: 10, left: 10 },
-          pageBreak: "auto",
-          showHead: "everyPage",
-        });
+        // Dividir en páginas si hay muchas columnas
+        const maxColumnsPerPage = 8; // Máximo 8 columnas por página
+        const totalPages = Math.ceil(columns.length / maxColumnsPerPage);
 
-        // Guardar archivo sin timestamp duplicado
+        for (let page = 0; page < totalPages; page++) {
+          if (page > 0) {
+            doc.addPage();
+            // Repetir header en cada página
+            doc.setFontSize(16);
+            doc.text(metadata.title || "Reporte de Datos", 14, 15);
+            doc.setFontSize(9);
+            doc.text(
+              `Generado: ${getCurrentDateTime()} - Página ${
+                page + 1
+              }/${totalPages}`,
+              14,
+              22
+            );
+          }
+
+          const startCol = page * maxColumnsPerPage;
+          const endCol = Math.min(startCol + maxColumnsPerPage, columns.length);
+
+          // Siempre incluir las 2 primeras columnas (Empleado y Plaza)
+          const pageColumns =
+            page === 0
+              ? columns.slice(startCol, endCol)
+              : ["Empleado", "Plaza", ...columns.slice(startCol, endCol)];
+
+          const pageRows = rows.map((row) =>
+            page === 0
+              ? row.slice(startCol, endCol)
+              : [row[0], row[1], ...row.slice(startCol, endCol)]
+          );
+
+          // Configurar tabla con mejor espaciado
+          autoTable(doc, {
+            head: [pageColumns],
+            body: pageRows,
+            startY: 28,
+            styles: {
+              fontSize: 5,
+              cellPadding: 1,
+              overflow: "linebreak",
+              cellWidth: "wrap",
+              valign: "middle",
+              halign: "center",
+            },
+            headStyles: {
+              fillColor: [25, 118, 210],
+              textColor: 255,
+              fontStyle: "bold",
+              fontSize: 6,
+              halign: "center",
+            },
+            alternateRowStyles: {
+              fillColor: [248, 249, 250],
+            },
+            columnStyles: {
+              0: {
+                cellWidth: 35, // Empleado más ancho
+                halign: "left",
+                fontSize: 5,
+              },
+              1: {
+                cellWidth: 15, // Plaza
+                halign: "center",
+                fontSize: 5,
+              },
+            },
+            margin: { top: 30, right: 8, bottom: 15, left: 8 },
+            pageBreak: "avoid",
+            showHead: "everyPage",
+            theme: "striped",
+            // Ajustar ancho automáticamente
+            tableWidth: "auto",
+            // Permitir que las celdas se ajusten al contenido
+            didParseCell: function (data) {
+              // Rotar texto en headers si es muy largo
+              if (data.section === "head" && data.cell.text[0].length > 12) {
+                data.cell.styles.cellWidth = 12;
+                data.cell.styles.fontSize = 4;
+              }
+            },
+          });
+        }
+
+        // Agregar pie de página con info del archivo
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.text(
+            `Sistema de Asistencias CVV - Página ${i} de ${pageCount}`,
+            doc.internal.pageSize.getWidth() / 2,
+            doc.internal.pageSize.getHeight() - 10,
+            { align: "center" }
+          );
+        }
+
+        // Guardar archivo
         doc.save(`${customFilename}.pdf`);
 
         return {
